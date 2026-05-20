@@ -11,13 +11,13 @@ timeline_budget:
   hard_deadline: null
   after_hours_only: true
 created: 2026-05-19
-updated: 2026-05-19
+updated: 2026-05-20
 version: 1
 status: draft
 checkpoint:
   current_phase: 8
   phases_completed: [1, 2, 3, 4, 5, 6, 7]
-  frs_drafted: 11
+  frs_drafted: 13
   gray_areas_resolved:
     - topic: "pain type"
       decision: "decision paralysis — cyclist has data but can't convert it into today's action"
@@ -45,7 +45,7 @@ A recreational or amateur-competitive road cyclist who rides 3–5 times per wee
 ## Success Criteria
 
 ### Primary
-A cyclist completes onboarding and receives a 2-week training plan whose sessions contain correct intensity targets for their declared equipment — watts for power-meter users, heart-rate zones for HRM users, RPE descriptions for users with no equipment. Plan generation requires no additional configuration beyond the onboarding flow.
+A cyclist completes onboarding and receives a 4-week training plan whose sessions contain correct intensity targets for their declared equipment — watts for power-meter users, heart-rate zones for HRM users, RPE descriptions for users with no equipment. Plan generation requires no additional configuration beyond the onboarding flow. When the plan period ends, the cyclist is prompted with a renewal check-in and receives a new 4-week plan.
 
 ### Secondary
 Completed sessions are viewable in a session history list — the user can scroll back through what they've done, confirming that the data persists and feels like a real training log.
@@ -55,11 +55,13 @@ Completed sessions are viewable in a session history list — the user can scrol
 - Onboarding answers must survive a browser close and return — the user is never asked to re-enter data they already submitted.
 
 ---
-*MVP scope (v1)*: onboarding → AI plan generation → done/skipped marking → session logging (duration, rating, km). FTP recalculation and session-move land in v2.
+*MVP scope (v1)*: onboarding → 4-week AI plan generation → done/skipped marking → session logging (duration, rating, km) → 4-week renewal check-in → new plan. Session-move and mid-plan FTP recalculation land in v2.
 
 ## Timeline Acknowledgment
 
-Acknowledged on 2026-05-19: scope-down was applied in Phase 3 (FTP recalculation, session-move, and bike tracking removed from v1). The resulting scoped MVP is estimated at 4–6 weeks of after-hours work (mvp_weeks: 6). User was presented with the sustained-effort cost before confirming this estimate.
+Acknowledged on 2026-05-19: scope-down was applied in Phase 3 (mid-plan FTP recalculation, session-move, and bike tracking removed from v1). The resulting scoped MVP is estimated at 4–6 weeks of after-hours work (mvp_weeks: 6). User was presented with the sustained-effort cost before confirming this estimate.
+
+Amendment on 2026-05-20: plan horizon changed from 2 weeks to 4 weeks. Plan renewal check-in added to v1 scope (FR-012, FR-013). Note: renewal FTP update is distinct from the removed mid-plan FTP recalculation — renewal only asks for new FTP when generating a brand-new plan, not during an active plan.
 
 ## Access Control
 
@@ -78,11 +80,11 @@ Email + password registration and login. Flat user model — every account is a 
   > Socrates: Counter-argument considered: "Editing FTP without regenerating the plan is misleading." Resolution: narrowed; FR-010 covers profile-only fields that do not affect the current plan. FTP editing and plan regeneration are scoped to v2.
 
 ### Plan
-- FR-004: Cyclist can receive an AI-generated 2-week training plan after reviewing and confirming their onboarding inputs. Priority: must-have
+- FR-004: Cyclist can receive an AI-generated 4-week training plan after reviewing and confirming their onboarding inputs. Priority: must-have
   > Socrates: Counter-argument considered: "Immediate generation on onboarding locks in any input mistakes." Resolution: updated; a confirmation/review step is added before generation triggers. Captured as Acceptance Criteria in US-01 rather than a separate FR.
 - FR-005: Cyclist can view each session's type, duration, and intensity targets adapted to their declared equipment (watts for power meter, heart-rate zones for HRM, RPE for no equipment). Priority: must-have
   > Socrates: Counter-argument considered: "Without a zone reference, users won't know what Zone 3 means." Resolution: gap acknowledged; added FR-011 (nice-to-have) for an in-session intensity reference.
-- FR-006: Cyclist can view a week-overview of their full 2-week plan. Priority: must-have
+- FR-006: Cyclist can view a week-overview of their full 4-week plan. Priority: must-have
   > Socrates: Counter-argument considered: "A second UI surface doubles design and maintenance work in v1." Resolution: kept; a plan overview is core to the weekly-structure promise of the product.
 
 ### Session Tracking
@@ -95,6 +97,12 @@ Email + password registration and login. Flat user model — every account is a 
 - FR-009: Cyclist can view a list of their completed sessions. Priority: nice-to-have
   > Socrates: Counter-argument considered: "History adds query, view, and pagination logic for no direct training benefit in v1." Resolution: kept as nice-to-have; it was the chosen secondary success criterion. Ships if time allows.
 
+### Plan Renewal
+- FR-012: When the 4-week plan period ends, cyclist is shown a renewal check-in prompting them to confirm or update: training goal, weekly availability, and (for power-meter users only) current FTP. Priority: must-have
+  > Amendment 2026-05-20: resolves the previously open "what happens after the plan expires?" gap. One check-in flow for all equipment types; FTP question shown only to power-meter users.
+- FR-013: After completing the renewal check-in, cyclist receives a new AI-generated 4-week plan reflecting any updated inputs. Priority: must-have
+  > Amendment 2026-05-20: the renewal plan generation uses the same rule as initial onboarding generation (FR-004). Updated inputs from the check-in replace the stored profile values for plan calculation purposes.
+
 ### Reference
 - FR-011: Cyclist can see a brief reference for intensity targets (zone definitions / RPE scale) within the session view. Priority: nice-to-have
   > Socrates: Added in response to FR-005 challenge. Zone reference is not required to ride the session but reduces confusion for users new to structured training.
@@ -105,7 +113,7 @@ Email + password registration and login. Flat user model — every account is a 
 
 - **Given** a new user who has just completed the onboarding flow (declared goal, equipment type, FTP, and weekly availability)
 - **When** they reach the end of the onboarding wizard
-- **Then** they see a 2-week training plan with at least one session scheduled for the current week, each session showing type, duration, and intensity targets matching their declared equipment (watts / heart-rate zones / RPE)
+- **Then** they see a 4-week training plan with at least one session scheduled for the current week, each session showing type, duration, and intensity targets matching their declared equipment (watts / heart-rate zones / RPE)
 
 #### Acceptance Criteria
 - A power-meter user sees watt targets on every interval session
@@ -114,15 +122,27 @@ Email + password registration and login. Flat user model — every account is a 
 - A confirmation/review screen is shown after onboarding completes, allowing the cyclist to check their inputs before plan generation triggers
 - Plan is visible immediately after the cyclist confirms their inputs
 
+### US-02: Cyclist renews their plan after 4 weeks
+
+- **Given** a cyclist whose 4-week plan has ended
+- **When** they open the app after the plan period expires
+- **Then** they are shown a renewal check-in asking whether their training goal, weekly availability, or (if they use a power meter) FTP has changed
+
+#### Acceptance Criteria
+- The check-in screen is the first thing shown when the plan has expired — not a notification, not an email
+- Power-meter users see an FTP field; HRM and no-equipment users do not
+- Confirming the check-in (with or without changes) immediately triggers generation of a new 4-week plan
+- The new plan reflects any values the cyclist updated in the check-in
+
 ## Business Logic
 
 The app generates a personalised training plan — session type, duration, and intensity targets — from three user-supplied inputs: FTP (or fitness-level estimate), training goal, and weekly availability.
 
 **Inputs the rule consumes**: FTP in watts (or an estimated equivalent derived from the user's self-reported fitness level when FTP is unknown), training goal (one of three: fitness & health / endurance / speed & racing), and weekly availability (number of days, which days, max session duration on workdays and weekends).
 
-**What the rule produces**: a 2-week sequence of sessions, each with a session type (intervals, endurance, recovery), a duration, and intensity targets. Intensity targets are expressed in standard training zones mapped from FTP (e.g. Zone 2 = 56–75% FTP, Zone 4 = 91–105% FTP). The output format adapts to declared equipment: watts for power-meter users, heart-rate zones for HRM users, RPE descriptions for users with no equipment.
+**What the rule produces**: a 4-week sequence of sessions, each with a session type (intervals, endurance, recovery), a duration, and intensity targets. Intensity targets are expressed in standard training zones mapped from FTP (e.g. Zone 2 = 56–75% FTP, Zone 4 = 91–105% FTP). The output format adapts to declared equipment: watts for power-meter users, heart-rate zones for HRM users, RPE descriptions for users with no equipment.
 
-**How the cyclist encounters it**: immediately after confirming their onboarding inputs, the plan appears as a week-view with sessions slotted to their available days. The rule runs once at onboarding; it does not re-run on session completion in v1 (plan adaptation is v2).
+**How the cyclist encounters it**: immediately after confirming their onboarding inputs, the plan appears as a week-view with sessions slotted to their available days. The rule runs at onboarding and again at each 4-week renewal check-in. It does not re-run mid-plan on session completion in v1 — plan adaptation within an active plan is v2.
 
 ## Non-Functional Requirements
 
@@ -138,7 +158,7 @@ The app generates a personalised training plan — session type, duration, and i
 - **No social or sharing features**: no plan sharing, no comparison with other cyclists, no public profiles in v1.
 - **No push or email notifications**: no reminders sent outside the app; in-app alerts only. Users must open WattWise to see anything.
 - **No .fit / .gpx file import or analysis**: data enters only through manual session completion. No ride file parsing from Garmin, Wahoo, or similar devices.
-- **No planning horizon beyond 2 weeks**: the app generates a 2-week plan; no 8-week training blocks, no seasonal periodisation in v1.
+- **No planning horizon beyond 4 weeks per block**: each plan covers 4 weeks; no 8-week or seasonal periodisation across blocks. Renewal generates a fresh 4-week plan, not a cumulative long-term programme.
 - **No native mobile app**: v1 is responsive web only; iOS and Android native apps are a future milestone.
 
 ## Open Questions
