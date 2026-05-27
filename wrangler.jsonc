@@ -13,6 +13,6 @@
     "enabled": true,
   },
   "placement": {
-    "mode": "on",
+    "mode": "smart",
   },
 }

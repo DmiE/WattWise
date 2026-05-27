@@ -35,7 +35,7 @@ WattWise is an Astro 6 SSR app (React 19, Tailwind 4, Supabase auth) targeting C
 
 - [x] Renamed `"name"` from `"10x-astro-starter"` → `"wattwise"`
 - [x] Added `"disable_nodejs_process_v2"` to `"compatibility_flags"` alongside `"nodejs_compat"`
-- [x] Added Smart Placement block (`"placement": { "mode": "on" }`)
+- [x] Added Smart Placement block (`"placement": { "mode": "smart" }`)
 
 **Final wrangler.jsonc shape**:
 ```json
@@ -54,7 +54,7 @@ WattWise is an Astro 6 SSR app (React 19, Tailwind 4, Supabase auth) targeting C
     "enabled": true
   },
   "placement": {
-    "mode": "on"
+    "mode": "smart"
   }
 }
 ```
