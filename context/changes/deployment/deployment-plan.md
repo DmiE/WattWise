@@ -7,19 +7,19 @@
 | 1 — Fix wrangler.jsonc | ✅ Done | |
 | 2a — Create Supabase project | ✅ Done | Project created |
 | 2b — Fix supabase/config.toml | ✅ Done | |
-| 2c — Supabase CLI login + link | ⬜ Pending | |
-| 2d — Auth redirect URLs | ⬜ Pending | |
-| 2e — Local Supabase stack | ⬜ Optional | |
-| 2f — DB migrations | ⬜ Pending | |
-| 3 — Local dev secrets (.dev.vars) | ⬜ Pending | |
+| 2c — Supabase CLI login + link | ✅ Done | |
+| 2d — Auth redirect URLs | ⏳ Blocked | needs production URL from Phase 7 first |
+| 2e — Local Supabase stack | ✅ Done | running on 127.0.0.1:54321 |
+| 2f — DB migrations | ⏸ Skipped | no migrations yet, empty DB is fine for first deploy |
+| 3 — Local dev secrets (.dev.vars) | ✅ Done | local credentials set |
 | 4 — Cloudflare account + wrangler auth | ✅ Done | |
-| 5 — Production build + preview | ⬜ Pending | |
+| 5 — Production build + preview | ✅ Done | |
 | 6 — Wire production secrets | ⬜ Pending | |
 | 7 — First deploy | ⬜ Pending | |
 | 8 — CI/CD wiring | ✅ Done | Repo configured |
 | 9 — Post-deploy verification | ⬜ Pending | |
 
-**Next action → Phase 2b**: fix `site_url` and `additional_redirect_urls` ports in `supabase/config.toml`.
+**Next action → Phase 6**: wire production secrets to Cloudflare Workers (`wrangler secret put`).
 
 ---
 
