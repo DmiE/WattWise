@@ -16,13 +16,26 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# environment variables
+# environment variables — ignore all variants, keep only .env.example
 .env
-.env.production
+.env.*
+!.env.example
+
+# local override files
+*.local
 
 # cloudflare
 .dev.vars
 .wrangler/
+
+# supabase cli artifacts
+supabase/.branches/
+
+# certificates and private keys
+*.pem
+*.key
+*.p12
+*.cert
 
 # macOS-specific files
 .DS_Store
