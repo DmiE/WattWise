@@ -1,6 +1,6 @@
 # WattWise — Cloudflare Workers + Supabase Deployment Plan
 
-## Progress snapshot — 2026-05-27
+## Progress snapshot — 2026-05-30
 
 | Phase | Status | Notes |
 |---|---|---|
@@ -18,8 +18,32 @@
 | 7 — First deploy | ✅ Done | https://wattwise.cross1357.workers.dev |
 | 8 — CI/CD wiring | ✅ Done | Repo configured |
 | 9 — Post-deploy verification | ✅ Done | all routes verified |
+| 10 — Switch to remote Supabase for local dev | ✅ Done | .dev.vars updated — Docker stack no longer needed |
 
 **✅ Deployment complete** — https://wattwise.cross1357.workers.dev is live.
+
+---
+
+## Phase 10 — Switch .dev.vars to remote Supabase (POC simplification) ✅ DONE
+
+**Why**: POC doesn't need a local DB copy. Remote-only removes Docker dependency and keeps one source of truth.
+
+**What changed** — `.dev.vars` updated to:
+```
+SUPABASE_URL=https://yfigasipwpqrzakwxcxl.supabase.co
+SUPABASE_KEY=<anon key>
+```
+
+**Current state**:
+- `npm run dev` hits the real remote Supabase directly — no `npx supabase start` needed
+- Local Docker stack can stay stopped permanently
+- Test signups will create real rows — use a dedicated test account (e.g. `test@wattwise.dev`)
+
+**When to revert**: when the POC gets real users — then bring local isolation back.
+
+> 🔴 **Migration safety rule**: Never run `npx supabase db push` or `npx supabase db reset` without
+> consciously thinking *"this will hit the production database"*. There is no local DB to act as a
+> safety buffer anymore — both commands target the remote project directly.
 
 ---
 
