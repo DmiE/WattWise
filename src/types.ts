@@ -1,0 +1,27 @@
+import type { Database } from "@/db/database.types";
+
+export type { Database };
+
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
+export type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
+
+export type Plan = Database["public"]["Tables"]["plans"]["Row"];
+export type PlanInsert = Database["public"]["Tables"]["plans"]["Insert"];
+export type PlanUpdate = Database["public"]["Tables"]["plans"]["Update"];
+
+export type PlanSession = Database["public"]["Tables"]["plan_sessions"]["Row"];
+export type PlanSessionInsert = Database["public"]["Tables"]["plan_sessions"]["Insert"];
+export type PlanSessionUpdate = Database["public"]["Tables"]["plan_sessions"]["Update"];
+
+export type SessionLog = Database["public"]["Tables"]["session_logs"]["Row"];
+export type SessionLogInsert = Database["public"]["Tables"]["session_logs"]["Insert"];
+export type SessionLogUpdate = Database["public"]["Tables"]["session_logs"]["Update"];
+
+export type EquipmentType = Database["public"]["Enums"]["equipment_type"];
+export type TrainingGoal = Database["public"]["Enums"]["training_goal"];
+export type FitnessLevel = Database["public"]["Enums"]["fitness_level"];
+export type FtpSource = Database["public"]["Enums"]["ftp_source"];
+export type PlanStatus = Database["public"]["Enums"]["plan_status"];
+export type SessionStatus = Database["public"]["Enums"]["session_status"];
+export type SessionType = Database["public"]["Enums"]["session_type"];

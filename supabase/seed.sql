@@ -1,0 +1,1 @@
+-- Seed data for WattWise local development. Intentionally empty until a slice requires seed fixtures.
