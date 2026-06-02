@@ -292,8 +292,8 @@ Forward-only — no existing rows to migrate. Deploy path is `npx supabase db pu
 
 #### Manual
 
-- [x] 2.1 `manual-verification.md` exists with the full procedure (two-account isolation + constraint checks + anon denial)
-- [x] 2.2 Two test accounts created; cross-user SELECT/UPDATE/DELETE denied on all four tables
-- [x] 2.3 Constraint sanity checks pass: partial-unique-on-active-plans, power_meter_requires_ftp, fitness_level_matches_ftp_source
-- [x] 2.4 Anon role denied on all four tables
-- [x] 2.5 Document signed off with name + date; test users deleted from the linked project
+- [x] 2.1 `manual-verification.md` exists with the full procedure (two-account isolation + constraint checks + anon denial) — e68a16c
+- [x] 2.2 Two test accounts created; cross-user SELECT/UPDATE/DELETE denied on all four tables — e68a16c
+- [x] 2.3 Constraint sanity checks pass: partial-unique-on-active-plans, power_meter_requires_ftp, fitness_level_matches_ftp_source — e68a16c
+- [x] 2.4 Anon role denied on all four tables — e68a16c
+- [x] 2.5 Document signed off with name + date; test users deleted from the linked project — e68a16c
