@@ -2,7 +2,7 @@
 
 ## Overview
 
-Define the four MVP database tables — `profiles`, `plans`, `plan_sessions`, `session_logs` — with strict per-user Row-Level Security, in a single atomic Supabase migration. Add a `db:types` script to generate `src/types.ts` so every downstream slice has typed access. Verify cross-user isolation with a pgTAP test plus a manual two-account check; wire `supabase test db` into CI so future migrations can't weaken RLS unnoticed. Scope is DB-only — no API, no UI, no AI integration.
+Define the four MVP database tables — `profiles`, `plans`, `plan_sessions`, `session_logs` — with strict per-user Row-Level Security, in a single atomic Supabase migration. Add a `db:types` script to generate `src/types.ts` so every downstream slice has typed access. Verify cross-user isolation with a manual two-account check against the linked remote project (automated pgTAP-in-CI is deferred under remote-only POC posture per commit 2c3a4d5; see Open Risks). Scope is DB-only — no API, no UI, no AI integration.
 
 ## Current State Analysis
 
@@ -19,20 +19,18 @@ Define the four MVP database tables — `profiles`, `plans`, `plan_sessions`, `s
 - The "I don't know my FTP" path requires a separate `fitness_level` signal so the AI has a fitness magnitude when measured FTP is absent (`context/foundation/prd.md:74-75`). `fitness_level` is set iff FTP is not measured — covers both power-meter-with-no-test users and all HRM / no-equipment users.
 - Postgres does **not** auto-index FK columns; `plan_sessions(plan_id)` and `plans(user_id)` need explicit indexes.
 - `CLAUDE.md:39` mandates "granular per-operation, per-role policies" — four policies per table (SELECT/INSERT/UPDATE/DELETE) on `authenticated`, default-deny for `anon`.
-- Supabase project is linked to a remote ref, so `supabase db push` is the deploy path; local Docker (`supabase start` + `supabase test db`) is the test path; CI uses the latter.
+- Supabase project is linked to a remote ref (`yfigasipwpqrzakwxcxl`); per commit 2c3a4d5, local Docker is disabled for this project (the active `.dev.vars` points at remote credentials with local Docker preserved only as commented-out fallback). `supabase db push --linked` is the deploy and apply path; there is no local stack against which to run `supabase test db` or `supabase db reset`. CLAUDE.md line 48 (`Local Supabase: \`npx supabase start\` (requires Docker)`) is stale and should be updated in this slice.
 
 ## Desired End State
 
 A merged commit on `main` such that:
 
-1. `supabase/migrations/<timestamp>_init_mvp_schema.sql` exists and applies cleanly (`npx supabase db reset` succeeds).
+1. `supabase/migrations/<timestamp>_init_mvp_schema.sql` exists and applies cleanly to the linked remote project via `npx supabase db push --linked`.
 2. The four tables exist with correct columns, FKs, CHECK constraints, indexes, and the partial unique on active plans.
 3. RLS is enabled on all four tables; each has four per-operation policies on `authenticated`; `anon` has no policies (default-deny).
 4. `src/types.ts` re-exports the generated `Database` type plus entity aliases (`Profile`, `Plan`, `PlanSession`, `SessionLog`, with `Insert`/`Update` variants).
 5. `package.json` has a `db:types` script that regenerates `src/types.ts` from the linked project.
-6. `supabase/tests/rls_test.sql` exists; `npx supabase test db` passes locally and in CI.
-7. CI runs `supabase test db` on every push, blocking RLS regressions.
-8. Manual two-account check documented in `manual-verification.md` and signed off once.
+6. `context/changes/data-schema-and-rls/manual-verification.md` exists and is signed off after a one-time two-account cross-user isolation check against the linked project.
 
 ## What We're NOT Doing
 
@@ -48,7 +46,7 @@ A merged commit on `main` such that:
 
 ## Implementation Approach
 
-One atomic migration introduces the entire MVP schema as a single reviewable diff (~250–350 lines of SQL). Type generation is a `db:types` npm script run once at the end of Phase 1 to produce `src/types.ts`; the file is committed and regenerated on every future migration. RLS policies follow the chain pattern — direct `auth.uid()` for `profiles` and `plans`, `EXISTS` subqueries for `plan_sessions` and `session_logs`. Phase 1 lands the schema and types; Phase 2 lands the verification harness (pgTAP file + CI step + manual checklist).
+One atomic migration introduces the entire MVP schema as a single reviewable diff (~250–350 lines of SQL). Type generation is a `db:types` npm script run once at the end of Phase 1 to produce `src/types.ts`; the file is committed and regenerated on every future migration. RLS policies follow the chain pattern — direct `auth.uid()` for `profiles` and `plans`, `EXISTS` subqueries for `plan_sessions` and `session_logs`. Phase 1 lands the schema, types, and applies the migration to the linked project; Phase 2 lands the manual verification checklist and executes the two-account cross-user check. Automated RLS testing (pgTAP in CI) is intentionally deferred — it requires a local Supabase stack that this project does not maintain; the trade-off is recorded in Open Risks.
 
 ## Critical Implementation Details
 
@@ -78,7 +76,7 @@ Introduce the entire MVP schema in one atomic migration: extensions, seven enums
 
 **Contract**:
 
-- **Extensions**: `CREATE EXTENSION IF NOT EXISTS pgcrypto` (for `gen_random_uuid()`).
+- **Extensions**: none required for this slice. `gen_random_uuid()` is a Postgres 17 core function (no extension needed).
 - **Enums** (all in `public`):
   - `equipment_type`: `power_meter`, `hrm`, `none`
   - `training_goal`: `fitness_health`, `endurance`, `speed_racing`
@@ -111,7 +109,7 @@ Introduce the entire MVP schema in one atomic migration: extensions, seven enums
   - `plan_sessions(plan_id)`
   - `plan_sessions(plan_id, scheduled_date)`
 
-- **RLS** (per `CLAUDE.md:39` — per-operation, per-role; on each table run `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` and `ALTER TABLE ... FORCE ROW LEVEL SECURITY`):
+- **RLS** (per `CLAUDE.md:39` — per-operation, per-role; on each table run `ALTER TABLE ... ENABLE ROW LEVEL SECURITY`; `FORCE` is not applied, matching the documented Supabase pattern):
   - `profiles` × 4 policies on `authenticated`: `USING/WITH CHECK (user_id = auth.uid())`
   - `plans` × 4 policies on `authenticated`: `USING/WITH CHECK (user_id = auth.uid())`
   - `plan_sessions` × 4 policies on `authenticated`: ownership via `EXISTS (SELECT 1 FROM plans WHERE plans.id = plan_sessions.plan_id AND plans.user_id = auth.uid())`
@@ -128,121 +126,103 @@ Introduce the entire MVP schema in one atomic migration: extensions, seven enums
 
 **Contract**: One line: `-- Seed data for WattWise local development. Intentionally empty until a slice requires seed fixtures.`
 
-#### 3. Type generation script + initial `src/types.ts`
+#### 3. Type generation script + split types file
 
-**File**: `package.json` (modify), `src/types.ts` (new)
+**File**: `package.json` (modify), `src/db/database.types.ts` (new, generated), `src/types.ts` (new, hand-maintained wrapper)
 
-**Intent**: Add `db:types` script that regenerates types from the linked Supabase project. Run it once locally to produce `src/types.ts`. Commit the result. Below the generated `Database` block, hand-add entity aliases that downstream slices import.
+**Intent**: Add `db:types` script that regenerates types from the linked Supabase project to a dedicated file under `src/db/`. The hand-maintained `src/types.ts` imports `Database` from that file and defines entity aliases that downstream slices consume. Regeneration only ever overwrites `src/db/database.types.ts` — `src/types.ts` is safe from `>`-truncation.
 
 **Contract**:
 
-- `package.json` scripts add: `"db:types": "supabase gen types typescript --linked > src/types.ts && npm run format"`
-- `src/types.ts` shape:
+- `package.json` scripts add: `"db:types": "supabase gen types --lang=typescript --linked > src/db/database.types.ts && npm run format"`
+- `src/db/database.types.ts` (generated, fully overwritten by `db:types`):
+  - Top of file has a header comment: `// Generated by \`npm run db:types\` — do not edit by hand.`
+  - Exports `Database` type and per-enum literal unions.
+- `src/types.ts` (hand-maintained, never overwritten):
   ```ts
-  // Generated by `npm run db:types` from the linked Supabase project — do not edit by hand
-  // (everything above the manual aliases boundary regenerates)
-  export type Database = { /* generated tables, enums, views */ };
+  import type { Database } from "@/db/database.types";
 
-  // === entity aliases (manual — kept below regenerated block) ===
-  export type Profile = Database['public']['Tables']['profiles']['Row'];
-  export type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
-  export type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
+  export type { Database };
+
+  export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+  export type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
+  export type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
   // same for Plan, PlanSession, SessionLog
   // re-export enum string-literal unions: EquipmentType, TrainingGoal, FitnessLevel, FtpSource, PlanStatus, SessionStatus, SessionType
   ```
-  Note: the supabase CLI emits a self-contained file; the boundary comment is informational so future regens don't silently overwrite the aliases. If the CLI overwrites them, restore from git. (A follow-up slice could split this into `src/types.generated.ts` + `src/types.ts` re-export wrapper; intentionally deferred.)
+- `src/types.ts` remains the canonical import surface per `CLAUDE.md:50` ("Shared types go in `src/types.ts`") — downstream code imports `Profile`, `Plan`, etc. from `@/types`, never from `@/db/database.types`.
 
-#### 4. Local dev workflow note
+#### 4. CI branch fix (pre-existing bug)
 
-**File**: `CLAUDE.md` (modify — append one sentence to the Environment section)
+**File**: `.github/workflows/ci.yml`
 
-**Intent**: Point future contributors at the schema-reset command after pulling a migration. One sentence, no formatting changes.
+**Intent**: CI currently triggers on `master` (lines 5, 8), but the repo's default branch is `main`. As-is, CI never runs on the actual default branch. This slice is the first to make CI substantively relevant for schema work, so the fix lands here.
 
-**Contract**: At the end of the `### Environment` section, append: `After pulling a new migration, run \`npx supabase db reset\` to recreate the local DB and \`npm run db:types\` to refresh \`src/types.ts\`.`
+**Contract**: Replace both occurrences of `branches: [master]` with `branches: [main]` on lines 5 and 8.
+
+#### 5. CLAUDE.md updates (local-dev workflow + correction)
+
+**File**: `CLAUDE.md` (modify)
+
+**Intent**: (a) Correct the stale local-Supabase line (line 48) that contradicts commit 2c3a4d5's remote-only switch. (b) Append a remote-only migration workflow note.
+
+**Contract**:
+- Replace line 48 (`Local Supabase: \`npx supabase start\` (requires Docker)`) with: `Supabase: remote linked project only (commit 2c3a4d5); apply migrations via \`npx supabase db push --linked\`. Local Docker stack is preserved as commented-out fallback in \`.dev.vars\` but not used in the active workflow.`
+- At the end of the `### Environment` section, append: `After adding a migration, run \`npx supabase db push --linked\` to apply it to the remote, then \`npm run db:types\` to refresh \`src/types.ts\`.`
 
 ### Success Criteria:
 
 #### Automated Verification:
 
-- Migration applies cleanly: `npx supabase db reset`
+- Migration applies cleanly to the linked remote: `npx supabase db push --linked` succeeds
 - Type generation succeeds: `npm run db:types` exits 0 and `src/types.ts` is non-empty
 - Linting passes: `npm run lint`
 - Build succeeds: `npm run build`
 - Astro typecheck passes: `npx astro sync && npx astro check`
-- Partial unique index enforced: manual psql `INSERT INTO plans` of two `status='active'` rows for the same `user_id` fails with a unique-violation
 
 #### Manual Verification:
 
 - Supabase Studio (linked project) schema graph shows four tables with correct FK relationships
 - Each table has exactly four RLS policies (SELECT/INSERT/UPDATE/DELETE) on `authenticated`; no `anon` policies
-- Two-account smoke test: sign up users A and B; using each user's JWT in Supabase Studio's SQL editor, user B selects 0 rows from user A's `profiles`
 
-**Implementation Note**: After Phase 1's automated checks pass, pause here for manual confirmation that the two-account smoke test succeeded before starting Phase 2. Phase blocks use plain bullets — the corresponding `- [ ]` checkboxes for these items live in the `## Progress` section.
+**Implementation Note**: After Phase 1's automated checks pass, pause here for manual confirmation of the two Studio checks before starting Phase 2 (which executes the deeper two-account RLS verification). Phase blocks use plain bullets — the corresponding `- [ ]` checkboxes for these items live in the `## Progress` section.
 
 ---
 
-## Phase 2: Automated RLS Verification (pgTAP)
+## Phase 2: Manual RLS Verification
 
 ### Overview
 
-Add a pgTAP test file that exercises cross-user isolation on every table × every operation, plus the partial unique on active plans. Wire `supabase test db` into CI so a future migration weakening RLS is caught before merge. Land a manual verification checklist alongside.
+Document and execute a one-time two-account cross-user isolation check against the linked remote project. Confirms the PRD privacy guardrail end-to-end before downstream slices begin writing user data. Automated pgTAP-in-CI is deferred — see Open Risks.
 
 ### Changes Required:
 
-#### 1. pgTAP test file
-
-**File**: `supabase/tests/rls_test.sql`
-
-**Intent**: Run inside a transaction (BEGIN/ROLLBACK) so tests leave no state. Insert two synthetic `auth.users` rows; switch the JWT claim to each via `set_config('request.jwt.claims', ...)`; assert per-operation denial for every table.
-
-**Contract**:
-
-- Standard pgTAP envelope: `BEGIN; SELECT plan(N); …; SELECT * FROM finish(); ROLLBACK;`
-- Two fixed test UUIDs (e.g., `'a1111111-1111-1111-1111-111111111111'`, `'b2222222-2222-2222-2222-222222222222'`) inserted into `auth.users` with minimal required columns (id, email, encrypted_password placeholder)
-- Helper to switch user context: `SET LOCAL ROLE authenticated; SELECT set_config('request.jwt.claims', json_build_object('sub', '<uuid>')::text, true);`
-- Assertions (~25–30 total):
-  - anon role denied SELECT on all 4 tables (4 × `throws_ok`)
-  - user A inserts own profile, plan, session, log; user B sees zero rows (4 × `is_empty`)
-  - user B cannot UPDATE user A's row in each table (4 × `throws_ok` or zero affected rows)
-  - user B cannot DELETE user A's row in each table (4 × `throws_ok` or zero affected rows)
-  - Partial unique index: user A inserts second `status='active'` plan; expect unique violation (1 × `throws_ok`)
-  - CHECK constraints: insert `profiles` with `equipment_type='power_meter'` + `ftp_watts=NULL`; expect check violation (1 × `throws_ok`)
-  - CHECK constraints: insert with `ftp_source='measured'` AND `fitness_level='advanced'`; expect violation (1 × `throws_ok`)
-
-#### 2. CI step
-
-**File**: `.github/workflows/ci.yml`
-
-**Intent**: After the existing lint + build steps, add a new step (or job) that starts Supabase locally, applies migrations, runs `supabase test db`, then stops. Any failed assertion fails the build.
-
-**Contract**:
-
-- New step appended to the existing job: `- run: npx supabase db start && npx supabase db reset && npx supabase test db && npx supabase stop`
-- Or, if cleaner, a separate job `rls-test` running on `ubuntu-latest` with Docker (default on GH runners) — depends on the existing job
-- No additional secrets needed; runs against local Docker only
-
-#### 3. Manual verification doc
+#### 1. Manual verification document
 
 **File**: `context/changes/data-schema-and-rls/manual-verification.md`
 
-**Intent**: One-page checklist of the manual two-account test, runnable by any future maintainer when schema changes ship. Numbered steps; expected outcomes; checkbox for sign-off.
+**Intent**: Single-page numbered checklist for the two-account RLS smoke test against the linked remote project, runnable by any future maintainer whenever the schema changes. Each step has an expected outcome and a checkbox; the document ends with a "signed off by <name> on <date>" line.
 
-**Contract**: Numbered procedure — (1) sign up users A and B via the existing `/auth/signup` flow; (2) via Supabase Studio SQL editor with each user's JWT, `SELECT * FROM profiles`; (3) confirm each sees only their own row; (4) attempt cross-user UPDATE and DELETE; confirm zero rows affected. Includes a "checked off by <name> on <date>" line.
+**Contract**: Numbered procedure with these sections:
+1. **Setup** — sign up users A and B via the existing `/auth/signup` against the linked project; capture each user's `auth.users.id` from Studio.
+2. **Direct ownership checks** (`profiles` + `plans`) — using Studio SQL editor's "Impersonate user" feature (or the user's JWT in a `request.jwt.claims` setting), as user A INSERT a profile + a plan; as user B run `SELECT * FROM profiles`, `SELECT * FROM plans` → expect zero rows. Attempt `UPDATE profiles SET goal='endurance' WHERE user_id='<A>'` and `DELETE FROM plans WHERE user_id='<A>'` as user B → expect zero rows affected.
+3. **Chained ownership checks** (`plan_sessions` + `session_logs`) — as user A insert a `plan_sessions` row referencing A's plan, plus a `session_logs` row referencing that session. As user B run the same four ops (SELECT/UPDATE/DELETE) → expect zero rows.
+4. **Constraint sanity checks** — as user A: (a) INSERT a second `status='active'` plan → expect unique-violation; (b) INSERT a `profiles` row with `equipment_type='power_meter'` + `ftp_watts NULL` → expect `power_meter_requires_ftp` CHECK violation; (c) INSERT with `ftp_source='measured'` + `fitness_level='advanced'` → expect `fitness_level_matches_ftp_source` CHECK violation.
+5. **Anon role check** — switch Studio SQL editor to `anon` role; `SELECT * FROM profiles` (and the other three tables) → expect zero rows (RLS default-deny on tables with no `anon` policies).
+6. **Sign-off line** — "Checked off by <name> on <date>; outcomes match expectations."
+
+After sign-off, the document is committed to the repo as the live evidence that F-01 satisfied the PRD privacy guardrail.
 
 ### Success Criteria:
 
-#### Automated Verification:
-
-- `npx supabase test db` reports `ok` for every assertion locally
-- CI runs `supabase test db` and is green on the PR introducing this slice
-- One-time validation: a temporary commit with a deliberately broken policy (e.g., `USING (true)`) fails CI — record the result in `manual-verification.md`, then revert
-
 #### Manual Verification:
 
-- `manual-verification.md` checklist completed and signed off
-- `npx supabase test db` runs locally in under 60 seconds on the developer's machine
+- `manual-verification.md` exists with numbered procedure covering all four tables × {SELECT, UPDATE, DELETE} cross-user denial, plus the three constraint sanity checks
+- All steps executed against the linked remote project; expected outcomes observed and recorded
+- Document signed off with name + date
+- Test data created during verification is cleaned up (DELETE the test users via Supabase Studio Auth panel) after sign-off
 
-**Implementation Note**: After Phase 2's automated checks pass, pause for manual confirmation that the manual checklist was executed and the broken-RLS validation was performed (and reverted).
+**Implementation Note**: This phase has no automated verification. The manual checklist is the gate. If the linked project accumulates test data the developer cannot delete (or doesn't want to), perform the check against a freshly-created Supabase project that mirrors the migration, then transfer the sign-off.
 
 ---
 
@@ -250,19 +230,18 @@ Add a pgTAP test file that exercises cross-user isolation on every table × ever
 
 ### Unit Tests:
 
-No unit tests in this slice — there is no application code beyond `src/types.ts`. CHECK constraints are exercised by pgTAP via INSERT attempts.
+No unit tests in this slice — there is no application code beyond `src/types.ts`.
 
 ### Integration Tests:
 
-- `supabase/tests/rls_test.sql` is the integration test layer. Every operation × every table × cross-user denial is exercised. Partial unique index and key CHECK constraints are exercised.
+None automated in this slice. CHECK constraints and RLS isolation are exercised manually via `manual-verification.md` in Phase 2. (Pre-written pgTAP test design from the planning round is preserved in this plan's Open Risks section for future reactivation if local Docker is re-enabled.)
 
 ### Manual Testing Steps:
 
-1. `npx supabase db reset` locally; confirm no errors and the four tables exist in `psql`.
-2. Open Supabase Studio (linked project); confirm the four-table FK graph and each table's RLS-policy count (4 per table).
-3. Sign up two test accounts via the existing auth flow; from Studio SQL editor, attempt cross-user SELECT/UPDATE/DELETE per `manual-verification.md`.
-4. Attempt to manually INSERT a second `status='active'` plan for the same user; confirm a unique-violation error.
-5. Run `npm run db:types`; confirm `src/types.ts` regenerates and `git diff` shows only intentional changes (e.g., new tables on first run).
+1. Run `npx supabase db push --linked` from a developer machine logged in to Supabase; confirm the migration applies with no errors.
+2. Open Supabase Studio (linked project); confirm the four-table FK graph and each table's RLS-policy count (4 per table on `authenticated`, 0 on `anon`).
+3. Execute the procedure in `manual-verification.md` end-to-end (two-account isolation + constraint sanity + anon denial); record outcomes; sign off.
+4. Run `npm run db:types`; confirm `src/types.ts` regenerates and `git diff` shows only intentional changes (e.g., new tables on first run).
 
 ## Performance Considerations
 
@@ -270,7 +249,7 @@ Target scale (per PRD frontmatter: `users: small`, `qps: low`, `data_volume: sma
 
 ## Migration Notes
 
-Forward-only — no existing rows to migrate. Local devs run `npx supabase db reset` after pulling. Remote deploy is `npx supabase db push` from a clean state; verify the linked project has no existing public-schema tables before pushing (Studio → Table Editor → `public` schema). If anything exists, abort and consult the user — do not overwrite.
+Forward-only — no existing rows to migrate. Deploy path is `npx supabase db push --linked` against the linked project; there is no local stack to apply against (per commit 2c3a4d5). Before the first push, verify the linked project has no existing public-schema tables (Studio → Table Editor → `public` schema). If anything exists, abort and consult the user — do not overwrite. After push, any rollback requires a counter-migration (Supabase does not auto-rollback migrations on the remote — see `context/foundation/infrastructure.md:96`).
 
 ## References
 
@@ -294,28 +273,23 @@ Forward-only — no existing rows to migrate. Local devs run `npx supabase db re
 
 #### Automated
 
-- [ ] 1.1 Migration applies cleanly: `npx supabase db reset`
+- [ ] 1.1 Migration applies cleanly to linked remote: `npx supabase db push --linked` succeeds
 - [ ] 1.2 Type generation succeeds: `npm run db:types` exits 0 and `src/types.ts` is non-empty
 - [ ] 1.3 Linting passes: `npm run lint`
 - [ ] 1.4 Build succeeds: `npm run build`
 - [ ] 1.5 Astro typecheck passes: `npx astro sync && npx astro check`
-- [ ] 1.6 Partial unique index enforced: second `status='active'` plan INSERT fails
 
 #### Manual
 
-- [ ] 1.7 Supabase Studio schema graph shows four tables with correct FKs
-- [ ] 1.8 Each table has 4 policies (SELECT/INSERT/UPDATE/DELETE) on `authenticated`; no anon policies
-- [ ] 1.9 Two-account smoke test: user B cannot SELECT user A's profile
+- [ ] 1.6 Supabase Studio schema graph shows four tables with correct FKs
+- [ ] 1.7 Each table has 4 policies (SELECT/INSERT/UPDATE/DELETE) on `authenticated`; no anon policies
 
-### Phase 2: Automated RLS Verification (pgTAP)
-
-#### Automated
-
-- [ ] 2.1 `npx supabase test db` reports `ok` for every assertion locally
-- [ ] 2.2 CI runs `supabase test db` and is green on this PR
-- [ ] 2.3 One-time validation: deliberately broken-RLS commit fails CI (then reverted)
+### Phase 2: Manual RLS Verification
 
 #### Manual
 
-- [ ] 2.4 `manual-verification.md` checklist completed and signed off
-- [ ] 2.5 `supabase test db` runs locally in under 60 seconds
+- [ ] 2.1 `manual-verification.md` exists with the full procedure (two-account isolation + constraint checks + anon denial)
+- [ ] 2.2 Two test accounts created; cross-user SELECT/UPDATE/DELETE denied on all four tables
+- [ ] 2.3 Constraint sanity checks pass: partial-unique-on-active-plans, power_meter_requires_ftp, fitness_level_matches_ftp_source
+- [ ] 2.4 Anon role denied on all four tables
+- [ ] 2.5 Document signed off with name + date; test users deleted from the linked project
