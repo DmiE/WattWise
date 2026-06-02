@@ -277,23 +277,23 @@ Forward-only — no existing rows to migrate. Deploy path is `npx supabase db pu
 
 #### Automated
 
-- [x] 1.1 Migration applies cleanly to linked remote: `npx supabase db push --linked` succeeds
-- [x] 1.2 Type generation succeeds: `npm run db:types` exits 0 and `src/types.ts` is non-empty
-- [x] 1.3 Linting passes: `npm run lint`
-- [x] 1.4 Build succeeds: `npm run build`
-- [x] 1.5 Astro typecheck passes: `npx astro sync && npx astro check`
+- [x] 1.1 Migration applies cleanly to linked remote: `npx supabase db push --linked` succeeds — f95bbef
+- [x] 1.2 Type generation succeeds: `npm run db:types` exits 0 and `src/types.ts` is non-empty — f95bbef
+- [x] 1.3 Linting passes: `npm run lint` — f95bbef
+- [x] 1.4 Build succeeds: `npm run build` — f95bbef
+- [x] 1.5 Astro typecheck passes: `npx astro sync && npx astro check` — f95bbef
 
 #### Manual
 
-- [x] 1.6 Supabase Studio schema graph shows four tables with correct FKs
-- [x] 1.7 Each table has 4 policies (SELECT/INSERT/UPDATE/DELETE) on `authenticated`; no anon policies
+- [x] 1.6 Supabase Studio schema graph shows four tables with correct FKs — f95bbef
+- [x] 1.7 Each table has 4 policies (SELECT/INSERT/UPDATE/DELETE) on `authenticated`; no anon policies — f95bbef
 
 ### Phase 2: Manual RLS Verification
 
 #### Manual
 
-- [ ] 2.1 `manual-verification.md` exists with the full procedure (two-account isolation + constraint checks + anon denial)
-- [ ] 2.2 Two test accounts created; cross-user SELECT/UPDATE/DELETE denied on all four tables
-- [ ] 2.3 Constraint sanity checks pass: partial-unique-on-active-plans, power_meter_requires_ftp, fitness_level_matches_ftp_source
-- [ ] 2.4 Anon role denied on all four tables
-- [ ] 2.5 Document signed off with name + date; test users deleted from the linked project
+- [x] 2.1 `manual-verification.md` exists with the full procedure (two-account isolation + constraint checks + anon denial)
+- [x] 2.2 Two test accounts created; cross-user SELECT/UPDATE/DELETE denied on all four tables
+- [x] 2.3 Constraint sanity checks pass: partial-unique-on-active-plans, power_meter_requires_ftp, fitness_level_matches_ftp_source
+- [x] 2.4 Anon role denied on all four tables
+- [x] 2.5 Document signed off with name + date; test users deleted from the linked project
