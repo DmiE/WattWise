@@ -56,6 +56,8 @@ One atomic migration introduces the entire MVP schema as a single reviewable dif
 
 **`fitness_level` consistency.** Encoded as a CHECK constraint using `IS DISTINCT FROM` to handle three-valued logic correctly: `(ftp_source IS NOT DISTINCT FROM 'measured' AND fitness_level IS NULL) OR (ftp_source IS DISTINCT FROM 'measured' AND fitness_level IS NOT NULL)`. This correctly rejects `ftp_source='measured' AND fitness_level NOT NULL`, accepts `ftp_source=NULL AND fitness_level NOT NULL` (HRM / none-equipment), and accepts `ftp_source='estimated' AND fitness_level NOT NULL` (no-FTP-test path).
 
+**Duration bounds, planned vs. actual.** `plan_sessions.planned_duration_min` is bounded 15–360 (a generated session is always a deliberate 15-min-to-6-hour block), while `session_logs.actual_duration_min` is intentionally wider at 1–600. A logged ride is real-world data: it can be a 2-minute aborted start or a 9-hour epic that bears little relation to what was planned. The log table therefore accepts a broader range than the planner emits — this asymmetry is by design, not a typo. (Recorded after impl-review F4.)
+
 **Pre-onboarding state.** A signed-up user has no `profiles` row. S-01's route guard checks `profiles` existence (not just `auth.users`) to decide between routing to onboarding vs the dashboard. F-01 deliberately does not auto-create a profile via trigger — the NOT NULL columns are strict, and onboarding owns the first write.
 
 ---

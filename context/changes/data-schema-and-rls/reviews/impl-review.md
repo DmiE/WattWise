@@ -47,7 +47,7 @@
   - Tradeoff: Minor — one function definition, must qualify `now()` as `pg_catalog.now()`.
   - Confidence: HIGH — well-documented Supabase lint rule.
   - Blind spot: None significant.
-- **Decision**: PENDING
+- **Decision**: FIXED — new follow-up migration `supabase/migrations/20260605065635_pin_set_updated_at_search_path.sql` re-creates the function with `set search_path = ''` and `pg_catalog.now()`. Needs `npx supabase db push --linked` to apply to remote.
 
 ### F2 — Unplanned changes: eslint ignore + db:types script shape
 
@@ -57,7 +57,7 @@
 - **Location**: eslint.config.js:73 ; package.json:13
 - **Detail**: Two benign deviations from the plan's file contract. (a) eslint.config.js adds `{ ignores: ["src/db/database.types.ts"] }` — not in plan, but a sensible exclusion of a generated file from type-checked lint. (b) The `db:types` script differs from the plan's literal one-liner — uses `mkdir -p src/db` + `printf` header prepend + `prettier --write` on the single file. This is arguably an improvement: it actually produces the "// Generated … do not edit" header the plan's contract required.
 - **Fix**: None needed — accept as benign scope additions. Optionally note the eslint ignore in the plan as an addendum.
-- **Decision**: PENDING
+- **Decision**: SKIPPED — accepted as benign scope additions.
 
 ### F3 — db:types truncates the types file if generation fails
 
@@ -67,7 +67,7 @@
 - **Location**: package.json:13
 - **Detail**: The `{ printf …; supabase gen types …; } > src/db/database.types.ts` redirect truncates the target before the command runs. If generation fails (auth expired, not linked) the file is left near-empty. No injection risk — the printf format string and header arg are static. Low impact: regenerable and caught by typecheck.
 - **Fix**: Generate to a temp file and `mv` on success: `… supabase gen types … > src/db/database.types.tmp && mv src/db/database.types.tmp src/db/database.types.ts && prettier --write …`
-- **Decision**: PENDING
+- **Decision**: FIXED — `package.json` `db:types` now writes to `src/db/database.types.ts.tmp` and `mv`s on success; a failed `gen types` leaves the existing file intact.
 
 ### F4 — actual vs planned duration bound asymmetry
 
@@ -77,7 +77,7 @@
 - **Location**: migration:160 (planned 15–360) vs :233 (actual 1–600)
 - **Detail**: `plan_sessions.planned_duration_min` is bounded 15–360 while `session_logs.actual_duration_min` is 1–600. Both match the plan contract exactly (zero drift), so this is plan-as-designed. Flagging only to confirm the wider actual-duration window is intentional (a real ride can run longer/shorter than planned) rather than a typo.
 - **Fix**: Confirm intent; no code change expected.
-- **Decision**: PENDING
+- **Decision**: ACCEPTED — bounds intentionally kept at 1–600; asymmetry documented in `plan.md` (Critical Implementation Details → "Duration bounds, planned vs. actual").
 
 ## Notes
 
