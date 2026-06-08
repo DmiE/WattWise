@@ -51,7 +51,13 @@ export const bodyStepSchema = commonFields.pick({
 });
 
 // Step 2: equipment type + its branch fields (the discriminated part).
-export const equipmentStepSchema = z.discriminatedUnion("equipment_type", [
+//
+// The power-meter branch splits again on `knows_ftp`. Zod 4 requires each
+// discriminator value to be unique within a discriminated union, so the two
+// power-meter variants are modelled as a *nested* discriminated union on
+// `knows_ftp` (one `power_meter` member at the equipment level), not two
+// top-level members sharing `equipment_type='power_meter'`.
+const powerMeterStepBranch = z.discriminatedUnion("knows_ftp", [
   z.object({
     equipment_type: z.literal("power_meter"),
     knows_ftp: z.literal(true),
@@ -62,6 +68,10 @@ export const equipmentStepSchema = z.discriminatedUnion("equipment_type", [
     knows_ftp: z.literal(false),
     fitness_level: fitnessLevelSchema,
   }),
+]);
+
+export const equipmentStepSchema = z.discriminatedUnion("equipment_type", [
+  powerMeterStepBranch,
   z.object({
     equipment_type: z.literal("hrm"),
     max_hr: z.number().int().min(100).max(230),
@@ -76,8 +86,10 @@ export const equipmentStepSchema = z.discriminatedUnion("equipment_type", [
 // --- Full input schema (server + review) ---
 //
 // Composed from the same pieces: each equipment branch spreads the common
-// fields so the server validates the complete payload in one pass.
-export const onboardingInputSchema = z.discriminatedUnion("equipment_type", [
+// fields so the server validates the complete payload in one pass. Same nested
+// `knows_ftp` discriminated union as the step schema, with the common fields
+// folded in.
+const powerMeterFullBranch = z.discriminatedUnion("knows_ftp", [
   z.object({
     ...commonFields.shape,
     equipment_type: z.literal("power_meter"),
@@ -90,6 +102,10 @@ export const onboardingInputSchema = z.discriminatedUnion("equipment_type", [
     knows_ftp: z.literal(false),
     fitness_level: fitnessLevelSchema,
   }),
+]);
+
+export const onboardingInputSchema = z.discriminatedUnion("equipment_type", [
+  powerMeterFullBranch,
   z.object({
     ...commonFields.shape,
     equipment_type: z.literal("hrm"),

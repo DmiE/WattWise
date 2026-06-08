@@ -315,27 +315,27 @@ None — no schema changes. The `profiles` table from F-01 is used as-is.
 
 #### Automated
 
-- [x] 1.1 Type checking passes: `npm run build` (also proves `zod` resolves via the shared schema import)
-- [x] 1.2 Linting passes: `npm run lint`
+- [x] 1.1 Type checking passes: `npm run build` (also proves `zod` resolves via the shared schema import) — abbce47
+- [x] 1.2 Linting passes: `npm run lint` — abbce47
 
 #### Manual
 
-- [x] 1.3 Seven shadcn primitives render without console errors
+- [x] 1.3 Seven shadcn primitives render without console errors — abbce47
 
 ### Phase 2: Profile service + onboarding API route
 
 #### Automated
 
-- [ ] 2.1 Type checking passes: `npm run build`
-- [ ] 2.2 Linting passes: `npm run lint`
+- [x] 2.1 Type checking passes: `npm run build`
+- [x] 2.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 2.3 Power-meter-measured body creates row with `ftp_source='measured'`, `fitness_level=null`
-- [ ] 2.4 Power-meter-no-FTP body produces `ftp_source='estimated'`, clamped `ftp_watts`, set `fitness_level`
-- [ ] 2.5 HRM body stores `max_hr`/null FTP; none body stores null FTP and max_hr
-- [ ] 2.6 Invalid body returns 400 with field errors and writes nothing
-- [ ] 2.7 Submitting twice for the same user updates one row (no duplicate-key error)
+- [x] 2.3 Power-meter-measured body creates row with `ftp_source='measured'`, `fitness_level=null`
+- [x] 2.4 Power-meter-no-FTP body produces `ftp_source='estimated'`, clamped `ftp_watts`, set `fitness_level`
+- [x] 2.5 HRM body stores `max_hr`/null FTP; none body stores null FTP and max_hr
+- [x] 2.6 Invalid body returns 400 with field errors and writes nothing
+- [x] 2.7 Submitting twice for the same user updates one row (no duplicate-key error)
 
 ### Phase 3: Onboarding wizard island + page
 
