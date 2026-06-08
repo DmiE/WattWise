@@ -315,12 +315,12 @@ None — no schema changes. The `profiles` table from F-01 is used as-is.
 
 #### Automated
 
-- [ ] 1.1 Type checking passes: `npm run build` (also proves `zod` resolves via the shared schema import)
-- [ ] 1.2 Linting passes: `npm run lint`
+- [x] 1.1 Type checking passes: `npm run build` (also proves `zod` resolves via the shared schema import)
+- [x] 1.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 1.3 Seven shadcn primitives render without console errors
+- [x] 1.3 Seven shadcn primitives render without console errors
 
 ### Phase 2: Profile service + onboarding API route
 

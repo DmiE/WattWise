@@ -2,6 +2,10 @@ import type { Database } from "@/db/database.types";
 
 export type { Database };
 
+// Onboarding wizard input DTO (pre server-side derivation). Defined alongside
+// the shared zod schema in `@/lib/onboarding-schema`.
+export type { OnboardingInput } from "@/lib/onboarding-schema";
+
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
 export type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
