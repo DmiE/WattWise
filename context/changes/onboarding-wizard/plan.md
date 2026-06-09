@@ -356,13 +356,13 @@ None — no schema changes. The `profiles` table from F-01 is used as-is.
 
 #### Automated
 
-- [x] 4.1 Type checking passes: `npm run build`
-- [x] 4.2 Linting passes: `npm run lint`
+- [x] 4.1 Type checking passes: `npm run build` — f13d8ff
+- [x] 4.2 Linting passes: `npm run lint` — f13d8ff
 
 #### Manual
 
-- [x] 4.3 New user (no profile) signing in is routed to `/onboarding`
-- [x] 4.4 After onboarding, user lands on `/dashboard` with plan-coming stub
-- [x] 4.5 Visiting `/onboarding` with a saved profile redirects to `/dashboard`
-- [x] 4.6 Unauthenticated visit to `/onboarding` redirects to `/auth/signin`
-- [x] 4.7 No redirect loops; `/` and `/auth/*` remain reachable
+- [x] 4.3 New user (no profile) signing in is routed to `/onboarding` — f13d8ff
+- [x] 4.4 After onboarding, user lands on `/dashboard` with plan-coming stub — f13d8ff
+- [x] 4.5 Visiting `/onboarding` with a saved profile redirects to `/dashboard` — f13d8ff
+- [x] 4.6 Unauthenticated visit to `/onboarding` redirects to `/auth/signin` — f13d8ff
+- [x] 4.7 No redirect loops; `/` and `/auth/*` remain reachable — f13d8ff
