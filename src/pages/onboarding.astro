@@ -1,0 +1,13 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
+
+// Auth + profile gating is handled centrally in middleware (Phase 4), so this
+// page stays a thin shell that just mounts the wizard island.
+---
+
+<Layout title="Set up your profile">
+  <div class="bg-cosmic flex min-h-screen items-center justify-center p-4">
+    <OnboardingWizard client:load />
+  </div>
+</Layout>

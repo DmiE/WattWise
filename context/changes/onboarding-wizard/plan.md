@@ -326,31 +326,31 @@ None — no schema changes. The `profiles` table from F-01 is used as-is.
 
 #### Automated
 
-- [x] 2.1 Type checking passes: `npm run build`
-- [x] 2.2 Linting passes: `npm run lint`
+- [x] 2.1 Type checking passes: `npm run build` — 7409ca7
+- [x] 2.2 Linting passes: `npm run lint` — 7409ca7
 
 #### Manual
 
-- [x] 2.3 Power-meter-measured body creates row with `ftp_source='measured'`, `fitness_level=null`
-- [x] 2.4 Power-meter-no-FTP body produces `ftp_source='estimated'`, clamped `ftp_watts`, set `fitness_level`
-- [x] 2.5 HRM body stores `max_hr`/null FTP; none body stores null FTP and max_hr
-- [x] 2.6 Invalid body returns 400 with field errors and writes nothing
-- [x] 2.7 Submitting twice for the same user updates one row (no duplicate-key error)
+- [x] 2.3 Power-meter-measured body creates row with `ftp_source='measured'`, `fitness_level=null` — 7409ca7
+- [x] 2.4 Power-meter-no-FTP body produces `ftp_source='estimated'`, clamped `ftp_watts`, set `fitness_level` — 7409ca7
+- [x] 2.5 HRM body stores `max_hr`/null FTP; none body stores null FTP and max_hr — 7409ca7
+- [x] 2.6 Invalid body returns 400 with field errors and writes nothing — 7409ca7
+- [x] 2.7 Submitting twice for the same user updates one row (no duplicate-key error) — 7409ca7
 
 ### Phase 3: Onboarding wizard island + page
 
 #### Automated
 
-- [ ] 3.1 Type checking passes: `npm run build`
-- [ ] 3.2 Linting passes: `npm run lint`
+- [x] 3.1 Type checking passes: `npm run build`
+- [x] 3.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 3.3 Each equipment path completes end-to-end and lands on `/dashboard` with the correct row
-- [ ] 3.4 "Next" disabled until step valid; out-of-range inputs show inline messages
-- [ ] 3.5 Close-and-reopen mid-wizard restores answers and step
-- [ ] 3.6 Draft cleared on successful submit
-- [ ] 3.7 Wizard usable on a mobile-width viewport
+- [x] 3.3 Each equipment path completes end-to-end and lands on `/dashboard` with the correct row
+- [x] 3.4 "Next" disabled until step valid; out-of-range inputs show inline messages
+- [x] 3.5 Close-and-reopen mid-wizard restores answers and step
+- [x] 3.6 Draft cleared on successful submit
+- [x] 3.7 Wizard usable on a mobile-width viewport
 
 ### Phase 4: Routing/gating + dashboard stub
 
