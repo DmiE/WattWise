@@ -24,14 +24,19 @@ export const onRequest = defineMiddleware(async (context, next) => {
     // Authenticated on a protected route: profile presence decides placement.
     // No profile yet → send to onboarding; already onboarded → keep out of it.
     // Guards against redirect loops by checking whether we're already there.
-    const profile = supabase ? await getProfile(supabase, context.locals.user.id) : null;
     const onOnboarding = context.url.pathname.startsWith("/onboarding");
 
-    if (!profile && !onOnboarding) {
-      return context.redirect("/onboarding");
-    }
-    if (profile && onOnboarding) {
-      return context.redirect("/dashboard");
+    try {
+      const profile = supabase ? await getProfile(supabase, context.locals.user.id) : null;
+      if (!profile && !onOnboarding) {
+        return context.redirect("/onboarding");
+      }
+      if (profile && onOnboarding) {
+        return context.redirect("/dashboard");
+      }
+    } catch {
+      // Profile lookup failed — fall open to the requested route rather than
+      // misrouting an onboarded user on a transient read error.
     }
   }
 

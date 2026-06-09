@@ -185,7 +185,7 @@ Build the multi-step wizard React island with equipment branching, a progress in
 
 **Intent**: The full client-side wizard. Holds all answers in `useState`, advances through grouped steps, branches on `equipment_type`, validates each step with the shared schema before allowing "next", renders a final review screen, and POSTs to `/api/onboarding`.
 
-**Contract**: Default-exported React component (mounted `client:load`). Steps (grouped): (1) goal; (2) equipment type → conditional sub-fields (power-meter: knows-FTP toggle → FTP input *or* fitness-level select; HRM: max-HR input prefilled with `220−age`; none: fitness-level select); (3) body + availability (age, weight, day checkboxes, workday/weekend max minutes); (4) review (read-only summary of all answers) with a confirm button. Progress indicator reflects current step. "Next" is disabled until the current step's matching per-step validator (from Phase 1 §3) passes. On confirm: POST JSON, and on `200` clear the draft and `window.location` to `/dashboard`; on non-200 show the returned error inline on the review screen with all answers intact. Uses shadcn primitives + the `bg-cosmic`/`white/10` styling idiom from existing pages.
+**Contract**: Default-exported React component (mounted `client:load`). Steps (grouped): (1) goal; (2) body + availability (age, weight, day checkboxes, workday/weekend max minutes); (3) equipment type → conditional sub-fields (power-meter: knows-FTP toggle → FTP input *or* fitness-level select; HRM: max-HR input prefilled with `220−age`; none: fitness-level select); (4) review (read-only summary of all answers) with a confirm button. (Note: body+availability precedes equipment so `age` is captured before the HRM max-HR prefill `220−age` needs it — see addendum.) Progress indicator reflects current step. "Next" is disabled until the current step's matching per-step validator (from Phase 1 §3) passes. On confirm: POST JSON, and on `200` clear the draft and `window.location` to `/dashboard`; on non-200 show the returned error inline on the review screen with all answers intact. Uses shadcn primitives + the `bg-cosmic`/`white/10` styling idiom from existing pages.
 
 #### 2. Draft persistence
 
@@ -296,6 +296,10 @@ The added middleware profile lookup runs per request on protected routes; at the
 ## Migration Notes
 
 None — no schema changes. The `profiles` table from F-01 is used as-is.
+
+## Addenda (discovered during implementation)
+
+- **`src/lib/supabase.ts` was generically typed.** The SSR client factory was parameterized as `createServerClient<Database>(...)` (with an `import type { Database }`). Not in the original file list, but necessary: without the generic, the Phase 2 profile service (`getProfile`/`upsertProfile`, `.from("profiles")`) would be untyped (`any`), defeating the typed contracts. Type-only change, no runtime behavior change.
 
 ## References
 

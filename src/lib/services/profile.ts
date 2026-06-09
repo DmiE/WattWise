@@ -9,7 +9,12 @@ type SupabaseClient = NonNullable<ReturnType<typeof createClient>>;
 
 /** Fetch the caller's own profile, or null when they haven't onboarded yet. */
 export async function getProfile(supabase: SupabaseClient, userId: string): Promise<Profile | null> {
-  const { data } = await supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle();
+  const { data, error } = await supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle();
+  // maybeSingle returns {data:null,error:null} for an absent row; a non-null
+  // error means the read actually failed — propagate so callers can fail open.
+  if (error) {
+    throw new Error(`getProfile failed: ${error.message}`);
+  }
   return data ?? null;
 }
 

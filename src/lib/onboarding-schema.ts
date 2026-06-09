@@ -41,7 +41,7 @@ const commonFields = z.object({
 // Step 1: goal only.
 export const goalStepSchema = commonFields.pick({ goal: true });
 
-// Step 3: body + availability.
+// Step 2: body + availability.
 export const bodyStepSchema = commonFields.pick({
   age: true,
   weight_kg: true,
@@ -50,7 +50,7 @@ export const bodyStepSchema = commonFields.pick({
   max_weekend_minutes: true,
 });
 
-// Step 2: equipment type + its branch fields (the discriminated part).
+// Step 3: equipment type + its branch fields (the discriminated part).
 //
 // The power-meter branch splits again on `knows_ftp`. Zod 4 requires each
 // discriminator value to be unique within a discriminated union, so the two
