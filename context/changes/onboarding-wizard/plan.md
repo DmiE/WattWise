@@ -341,28 +341,28 @@ None — no schema changes. The `profiles` table from F-01 is used as-is.
 
 #### Automated
 
-- [x] 3.1 Type checking passes: `npm run build`
-- [x] 3.2 Linting passes: `npm run lint`
+- [x] 3.1 Type checking passes: `npm run build` — d32584d
+- [x] 3.2 Linting passes: `npm run lint` — d32584d
 
 #### Manual
 
-- [x] 3.3 Each equipment path completes end-to-end and lands on `/dashboard` with the correct row
-- [x] 3.4 "Next" disabled until step valid; out-of-range inputs show inline messages
-- [x] 3.5 Close-and-reopen mid-wizard restores answers and step
-- [x] 3.6 Draft cleared on successful submit
-- [x] 3.7 Wizard usable on a mobile-width viewport
+- [x] 3.3 Each equipment path completes end-to-end and lands on `/dashboard` with the correct row — d32584d
+- [x] 3.4 "Next" disabled until step valid; out-of-range inputs show inline messages — d32584d
+- [x] 3.5 Close-and-reopen mid-wizard restores answers and step — d32584d
+- [x] 3.6 Draft cleared on successful submit — d32584d
+- [x] 3.7 Wizard usable on a mobile-width viewport — d32584d
 
 ### Phase 4: Routing/gating + dashboard stub
 
 #### Automated
 
-- [ ] 4.1 Type checking passes: `npm run build`
-- [ ] 4.2 Linting passes: `npm run lint`
+- [x] 4.1 Type checking passes: `npm run build`
+- [x] 4.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 4.3 New user (no profile) signing in is routed to `/onboarding`
-- [ ] 4.4 After onboarding, user lands on `/dashboard` with plan-coming stub
-- [ ] 4.5 Visiting `/onboarding` with a saved profile redirects to `/dashboard`
-- [ ] 4.6 Unauthenticated visit to `/onboarding` redirects to `/auth/signin`
-- [ ] 4.7 No redirect loops; `/` and `/auth/*` remain reachable
+- [x] 4.3 New user (no profile) signing in is routed to `/onboarding`
+- [x] 4.4 After onboarding, user lands on `/dashboard` with plan-coming stub
+- [x] 4.5 Visiting `/onboarding` with a saved profile redirects to `/dashboard`
+- [x] 4.6 Unauthenticated visit to `/onboarding` redirects to `/auth/signin`
+- [x] 4.7 No redirect loops; `/` and `/auth/*` remain reachable

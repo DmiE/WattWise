@@ -13,7 +13,13 @@ const { user } = Astro.locals;
       <p class="text-blue-100/80">
         Welcome, <span class="font-semibold text-white">{user?.email}</span>
       </p>
-      <p class="mt-2 text-sm text-blue-100/50">This page is only for authenticated users.</p>
+      <div class="mt-6 rounded-xl border border-white/10 bg-white/5 p-6">
+        <h2 class="text-lg font-semibold text-white">Your 4-week plan is coming</h2>
+        <p class="mt-2 text-sm text-blue-100/70">
+          Thanks for setting up your profile. We're getting ready to generate your personalized training plan — check
+          back soon.
+        </p>
+      </div>
       <form method="POST" action="/api/auth/signout" class="mt-6">
         <button
           type="submit"
