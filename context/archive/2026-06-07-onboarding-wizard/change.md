@@ -1,10 +1,10 @@
 ---
 change_id: onboarding-wizard
 title: Onboarding wizard form with pre-generation confirmation screen
-status: impl_reviewed
+status: archived
 created: 2026-06-07
-updated: 2026-06-09
-archived_at: null
+updated: 2026-06-10
+archived_at: 2026-06-10T17:43:10Z
 ---
 
 ## Notes

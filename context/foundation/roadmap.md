@@ -3,7 +3,7 @@ project: WattWise
 version: 1
 status: draft
 created: 2026-05-31
-updated: 2026-06-07
+updated: 2026-06-10
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -30,7 +30,7 @@ Amateur road cyclists who already know their FTP have no tool that converts thei
 | ID   | Change ID               | Outcome (user can …)                                                                 | Prerequisites | PRD refs                    | Status   |
 | ---- | ----------------------- | ------------------------------------------------------------------------------------ | ------------- | --------------------------- | -------- |
 | F-01 | data-schema-and-rls     | (foundation) MVP schema live; profile, plan, and session tables with RLS in place    | —             | §NFRs (data privacy)        | done     |
-| S-01 | onboarding-wizard       | complete the onboarding wizard and see a confirmation screen; data persists          | F-01          | FR-001, FR-002, FR-003, US-01 | proposed |
+| S-01 | onboarding-wizard       | complete the onboarding wizard and see a confirmation screen; data persists          | F-01          | FR-001, FR-002, FR-003, US-01 | done     |
 | S-02 | first-plan-generation   | confirm inputs and receive a 4-week AI plan with equipment-adapted intensity targets | S-01          | FR-004, FR-005, FR-006, US-01 | proposed |
 | S-04 | profile-editing         | edit goal, availability, age, and weight after onboarding                            | S-01          | FR-010                      | proposed |
 | S-03 | session-tracking        | mark any session done (with log) or skipped                                          | S-02          | FR-007, FR-008              | proposed |
@@ -91,7 +91,7 @@ Foundations below assume these layers are present and do NOT re-scaffold them.
 - **Unknowns:**
   - How should the "I don't know my FTP" path present fitness-level options, and what starting FTP estimate does each option map to? — Owner: product. Block: no (decidable during planning; doesn't gate the slice).
 - **Risk:** Onboarding form quality directly determines data quality for AI plan generation. A confusing form leads to wrong equipment type → wrong intensity targets → destroyed trust (PRD guardrail: "intensity targets must match declared equipment exactly"). Sequenced before plan generation so any UX problems are caught before the AI call is layered on top.
-- **Status:** proposed
+- **Status:** done
 
 ---
 
@@ -214,3 +214,4 @@ Foundations below assume these layers are present and do NOT re-scaffold them.
 ## Done
 
 - **F-01: (foundation) All MVP database tables exist in Supabase with correct Row-Level Security policies: user profile, training plans, plan sessions, and session logs. The auth layer can safely write and read user-scoped data before any vertical slice begins.** — Archived 2026-06-07 → `context/archive/2026-05-31-data-schema-and-rls/`. Lesson: —.
+- **S-01: User can complete the onboarding wizard — declaring training goal, equipment type, FTP (or a fitness-level estimate via the "I don't know my FTP" path), age, weight, and weekly availability — and see a confirmation/review screen before triggering plan generation. All data persists across browser close.** — Archived 2026-06-10 → `context/archive/2026-06-07-onboarding-wizard/`. Lesson: —.
