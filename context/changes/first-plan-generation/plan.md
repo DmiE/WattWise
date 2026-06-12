@@ -348,14 +348,14 @@ No schema migration — `plans`/`plan_sessions` already exist (F-01). Only env v
 
 #### Automated
 
-- [x] 1.1 Type checking passes: `npm run lint`
-- [x] 1.2 Production build succeeds: `npm run build`
-- [x] 1.3 No `process.env` introduced; secrets read via `astro:env/server`
+- [x] 1.1 Type checking passes: `npm run lint` — fa8366c
+- [x] 1.2 Production build succeeds: `npm run build` — fa8366c
+- [x] 1.3 No `process.env` introduced; secrets read via `astro:env/server` — fa8366c
 
 #### Manual
 
-- [x] 1.4 Client returns parsed JSON for a trivial schema with the key set
-- [x] 1.5 Client fails closed when the key is absent
+- [x] 1.4 Client returns parsed JSON for a trivial schema with the key set — fa8366c
+- [x] 1.5 Client fails closed when the key is absent — fa8366c
 
 ### Phase 2: Plan Contract & Generation Logic
 

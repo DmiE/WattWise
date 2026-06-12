@@ -3,7 +3,7 @@ change_id: first-plan-generation
 title: Generate first 4-week AI plan with equipment-adapted intensity targets
 status: implementing
 created: 2026-06-10
-updated: 2026-06-12
+updated: 2026-06-13
 archived_at: null
 ---
 
