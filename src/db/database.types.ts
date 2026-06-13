@@ -230,7 +230,7 @@ export type Database = {
       equipment_type: "power_meter" | "hrm" | "none";
       fitness_level: "beginner" | "intermediate" | "advanced";
       ftp_source: "measured" | "estimated";
-      plan_status: "active" | "expired" | "superseded";
+      plan_status: "active" | "expired" | "superseded" | "pending";
       session_status: "pending" | "done" | "skipped";
       session_type: "endurance" | "intervals" | "recovery";
       training_goal: "fitness_health" | "endurance" | "speed_racing";
@@ -359,7 +359,7 @@ export const Constants = {
       equipment_type: ["power_meter", "hrm", "none"],
       fitness_level: ["beginner", "intermediate", "advanced"],
       ftp_source: ["measured", "estimated"],
-      plan_status: ["active", "expired", "superseded"],
+      plan_status: ["active", "expired", "superseded", "pending"],
       session_status: ["pending", "done", "skipped"],
       session_type: ["endurance", "intervals", "recovery"],
       training_goal: ["fitness_health", "endurance", "speed_racing"],

@@ -142,7 +142,9 @@ Define the validated plan/segment contract, build the prompt from a profile, and
 
 **Intent**: Convert a validated plan + profile + a chosen `start_date` into a `PlanInsert` and `PlanSessionInsert[]`, computing `scheduled_date`, snapshotting `*_at_generation`, and setting `end_date = start_date + 27`.
 
-**Contract**: `toPlanInsert(profile, startDate, metadata): PlanInsert` (sets `status:'active'`, snapshot columns from profile, `generation_metadata` = `{ model, prompt_version, usage }`) and `toSessionInserts(planId, profile, validatedPlan, startDate): PlanSessionInsert[]` (each `scheduled_date = startDate + day_index - 1`, `structure` carrying `{ segments }`). `start_date` is the **next Monday** (computed in the route/`toPlanInsert`), anchoring `day_index 1 = 'mon'` so the prompt's fixed mon–sun frame and the validator agree; documented in a comment. (Plan may therefore begin up to 6 days out — an intentional product nuance, not a bug.)
+**Contract**: `toPlanInsert(profile, startDate, metadata): PlanInsert` (sets `status:'active'`, snapshot columns from profile, `generation_metadata` = `{ model, prompt_version, usage }`) and `toSessionInserts(planId, profile, validatedPlan, startDate): PlanSessionInsert[]` (each `scheduled_date = startDate + day_index - 1`, `structure` carrying `{ segments }`). <!-- Addendum (impl-review F3, 2026-06-13): implemented as `toSessionInserts(planId, validatedPlan, startDate)` — `profile` was dropped as unused; `scheduled_date`/`structure` are derived from `validatedPlan` + `startDate` alone. Signature-only simplification, output contract unchanged. -->
+
+> **Note (impl-review F3):** `toSessionInserts` ships as `(planId, validatedPlan, startDate)` — the planned `profile` arg was unnecessary and dropped. Output rows are unchanged. `start_date` is the **next Monday** (computed in the route/`toPlanInsert`), anchoring `day_index 1 = 'mon'` so the prompt's fixed mon–sun frame and the validator agree; documented in a comment. (Plan may therefore begin up to 6 days out — an intentional product nuance, not a bug.)
 
 ### Success Criteria:
 

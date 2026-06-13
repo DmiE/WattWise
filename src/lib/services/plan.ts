@@ -58,43 +58,70 @@ export async function getPlanWithSessions(supabase: SupabaseClient, planId: stri
 export type PersistPlanResult = { plan: Plan } | { error: string };
 
 /**
- * Parent-first persist under RLS: insert the `plans` row, then build and insert
- * its sessions from the new plan id. Two correctness guards:
+ * Parent-first persist under RLS, in three crash-safe phases:
  *
- *   - If session insertion fails after the plan row lands, delete the orphan
- *     plan so the idempotent `getActivePlan` check never returns a sessionless
- *     active plan (see plan.md "Critical Implementation Details").
- *   - A `plans`-insert unique violation (23505 on `one_active_plan_per_user`)
- *     means another request won the race to create the active plan. That's an
- *     idempotent win, not an error: re-query and return the existing plan so a
- *     lost-the-race caller still gets the plan, closing the TOCTOU window
- *     between the route's `getActivePlan` read and this insert.
+ *   1. Insert the `plans` row as `status='pending'` — invisible to both
+ *      `getActivePlan` and the `one_active_plan_per_user` partial index.
+ *   2. Insert its sessions from the new plan id; on failure delete the pending
+ *      parent (FK cascade clears partial sessions). Nothing became active.
+ *   3. Flip the row to `status='active'` as the last step. Because every prior
+ *      failure (including a crash between phases) leaves a non-active row, a
+ *      sessionless active plan can never be served (see plan.md F1).
+ *
+ * The `one_active_plan_per_user` unique index is enforced at phase 3, so a
+ * caller that lost the race hits 23505 there: an idempotent win, not an error —
+ * we drop our pending plan, re-query, and return the winner's active plan,
+ * closing the TOCTOU window between the route's `getActivePlan` read and this
+ * write.
  */
 export async function persistPlan(
   supabase: SupabaseClient,
   planInsert: PlanInsert,
   sessionInsertsFactory: (planId: string) => PlanSessionInsert[],
 ): Promise<PersistPlanResult> {
-  const { data: plan, error: planError } = await supabase.from("plans").insert(planInsert).select().single();
-
+  // Phase 1: insert the parent as 'pending' so it is invisible to both
+  // getActivePlan (status='active' only) and the one_active_plan_per_user
+  // partial index until its sessions have landed. This makes the whole persist
+  // crash-safe: a failure at any point below leaves a non-active row that is
+  // never served and never blocks regeneration.
+  const { data: plan, error: planError } = await supabase
+    .from("plans")
+    .insert({ ...planInsert, status: "pending" })
+    .select()
+    .single();
   if (planError) {
-    if (planError.code === PG_UNIQUE_VIOLATION) {
-      // Lost the race — another request already created the active plan.
+    return { error: `plan insert failed: ${planError.message}` };
+  }
+
+  // Phase 2: insert sessions; on failure drop the pending parent (FK cascade
+  // clears any partial sessions) — nothing ever became active.
+  const sessionInserts = sessionInsertsFactory(plan.id);
+  const { error: sessionsError } = await supabase.from("plan_sessions").insert(sessionInserts);
+  if (sessionsError) {
+    await supabase.from("plans").delete().eq("id", plan.id);
+    return { error: `session insert failed: ${sessionsError.message}` };
+  }
+
+  // Phase 3: activate as the last step. The one_active_plan_per_user index is
+  // enforced here, so a caller that lost the race hits 23505 — drop our pending
+  // plan and return the winner's active plan (idempotent win), closing the
+  // TOCTOU window between the route's getActivePlan read and this write.
+  const { data: active, error: activateError } = await supabase
+    .from("plans")
+    .update({ status: "active" })
+    .eq("id", plan.id)
+    .select()
+    .single();
+  if (activateError) {
+    await supabase.from("plans").delete().eq("id", plan.id);
+    if (activateError.code === PG_UNIQUE_VIOLATION) {
       const existing = await getActivePlan(supabase, planInsert.user_id);
       if (existing) {
         return { plan: existing };
       }
     }
-    return { error: `plan insert failed: ${planError.message}` };
+    return { error: `plan activation failed: ${activateError.message}` };
   }
 
-  const sessionInserts = sessionInsertsFactory(plan.id);
-  const { error: sessionsError } = await supabase.from("plan_sessions").insert(sessionInserts);
-  if (sessionsError) {
-    // Roll back the orphan parent so no sessionless active plan survives.
-    await supabase.from("plans").delete().eq("id", plan.id);
-    return { error: `session insert failed: ${sessionsError.message}` };
-  }
-
-  return { plan };
+  return { plan: active };
 }

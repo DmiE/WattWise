@@ -20,6 +20,13 @@ const json = (body: unknown, status: number) =>
 // availability / duration). Total LLM calls = MAX_GENERATION_ATTEMPTS.
 const MAX_GENERATION_ATTEMPTS = 2;
 
+// Overall upstream-wait budget shared across all generation attempts. Without
+// it the two retry layers (route attempts × the client's transport retries)
+// multiply into minutes on a degraded upstream. The deadline is passed into
+// generateStructured, which caps each transport attempt to the time remaining
+// and stops retrying once it passes (see plan.md F2).
+const GENERATION_BUDGET_MS = 90_000;
+
 /**
  * POST /api/plans/generate — idempotent first-plan generation.
  *
@@ -69,7 +76,14 @@ export const POST: APIRoute = async (context) => {
   // frame and the validator agree (see plan.ts `nextMonday`).
   const startDate = nextMonday(new Date());
 
+  const deadline = Date.now() + GENERATION_BUDGET_MS;
+
   for (let attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt++) {
+    // Stop before starting another attempt once the shared budget is spent.
+    if (Date.now() >= deadline) {
+      break;
+    }
+
     let result;
     try {
       result = await generateStructured({
@@ -77,6 +91,7 @@ export const POST: APIRoute = async (context) => {
         user: userMessage,
         jsonSchema: PLAN_JSON_SCHEMA,
         schemaName: "training_plan",
+        deadline,
       });
     } catch (err) {
       if (err instanceof OpenRouterError && err.code === "missing_api_key") {

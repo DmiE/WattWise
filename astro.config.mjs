@@ -25,6 +25,10 @@ export default defineConfig({
       // code edit. Both optional so build/dev work without them configured.
       OPENROUTER_API_KEY: envField.string({ context: "server", access: "secret", optional: true }),
       OPENROUTER_MODEL: envField.string({ context: "server", access: "public", optional: true }),
+      // Optional secondary model → OpenRouter `models[]` + `route: "fallback"`
+      // for provider redundancy if the primary model errors. Config-driven like
+      // OPENROUTER_MODEL; unset means a single-model request (no fallback).
+      OPENROUTER_FALLBACK_MODEL: envField.string({ context: "server", access: "public", optional: true }),
     },
   },
 });

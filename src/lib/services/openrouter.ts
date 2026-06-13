@@ -1,4 +1,4 @@
-import { OPENROUTER_API_KEY, OPENROUTER_MODEL } from "astro:env/server";
+import { OPENROUTER_API_KEY, OPENROUTER_FALLBACK_MODEL, OPENROUTER_MODEL } from "astro:env/server";
 
 // Thin OpenRouter chat-completion client. Transport concerns only — auth
 // headers, structured `response_format`, low temperature, bounded retry on
@@ -49,6 +49,13 @@ export interface GenerateStructuredParams {
   schemaName: string;
   /** Optional fallback model candidates → `models[]` + `route: "fallback"`. */
   fallbackModels?: string[];
+  /**
+   * Optional absolute epoch-ms deadline shared across the caller's own retry
+   * loop. Each transport attempt's timeout is capped to the time remaining, and
+   * the retry loop stops once the deadline passes — so layered retries (route
+   * attempts × transport retries) can't multiply into minutes (see plan.md F2).
+   */
+  deadline?: number;
 }
 
 export interface Usage {
@@ -104,18 +111,30 @@ export async function generateStructured(params: GenerateStructuredParams): Prom
       },
     },
   };
-  if (params.fallbackModels && params.fallbackModels.length > 0) {
-    body.models = [model, ...params.fallbackModels];
+  // Fallback candidates: an explicit caller override, else the config-driven
+  // OPENROUTER_FALLBACK_MODEL. When present, ask OpenRouter to route through
+  // [primary, ...fallbacks] in order if the primary errors.
+  const fallbackModels = params.fallbackModels ?? (OPENROUTER_FALLBACK_MODEL ? [OPENROUTER_FALLBACK_MODEL] : []);
+  if (fallbackModels.length > 0) {
+    body.models = [model, ...fallbackModels];
     body.route = "fallback";
   }
 
   let lastError: OpenRouterError | undefined;
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    // Cap this attempt to the lesser of the per-attempt timeout and the time
+    // left on the shared deadline; stop retrying once the deadline has passed.
+    const remaining = params.deadline !== undefined ? params.deadline - Date.now() : ATTEMPT_TIMEOUT_MS;
+    if (remaining <= 0) {
+      break;
+    }
+    const attemptTimeout = Math.min(ATTEMPT_TIMEOUT_MS, remaining);
+
     const controller = new AbortController();
     const timeout = setTimeout(() => {
       controller.abort();
-    }, ATTEMPT_TIMEOUT_MS);
+    }, attemptTimeout);
 
     let res: Response;
     try {
@@ -141,12 +160,12 @@ export async function generateStructured(params: GenerateStructuredParams): Prom
     }
 
     if (!res.ok) {
-      const detail = await res.text().catch(() => "");
-      lastError = new OpenRouterError(
-        "http_error",
-        `OpenRouter returned ${res.status}: ${detail.slice(0, 500)}`,
-        res.status,
-      );
+      // Drain the body so the connection can be reused, but do NOT embed the
+      // raw provider response in the Error message — it may be logged, and we
+      // keep no provider detail in surfaced errors. The status code alone
+      // decides retryability (see plan.md F4).
+      await res.text().catch(() => "");
+      lastError = new OpenRouterError("http_error", `OpenRouter returned ${res.status}`, res.status);
       if (isRetryableStatus(res.status)) {
         continue;
       }

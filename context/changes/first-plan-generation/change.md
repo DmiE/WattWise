@@ -4,6 +4,7 @@ title: Generate first 4-week AI plan with equipment-adapted intensity targets
 status: impl_reviewed
 created: 2026-06-10
 updated: 2026-06-13
+review_findings_resolved: 2026-06-13
 archived_at: null
 ---
 
