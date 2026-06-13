@@ -361,15 +361,15 @@ No schema migration — `plans`/`plan_sessions` already exist (F-01). Only env v
 
 #### Automated
 
-- [ ] 2.1 Type checking + lint pass: `npm run lint`
-- [ ] 2.2 Build succeeds: `npm run build`
-- [ ] 2.3 `PLAN_JSON_SCHEMA` is a valid JSON-Schema object consistent with the zod schema
+- [x] 2.1 Type checking + lint pass: `npm run lint`
+- [x] 2.2 Build succeeds: `npm run build`
+- [x] 2.3 `PLAN_JSON_SCHEMA` is a valid JSON-Schema object consistent with the zod schema
 
 #### Manual
 
-- [ ] 2.4 Valid plan per equipment type passes; mismatched target kind rejected
-- [ ] 2.5 Unavailable-day and over-cap-duration sessions rejected
-- [ ] 2.6 `toSessionInserts` `scheduled_date` correct for `day_index` 1 and 28
+- [x] 2.4 Valid plan per equipment type passes; mismatched target kind rejected
+- [x] 2.5 Unavailable-day and over-cap-duration sessions rejected
+- [x] 2.6 `toSessionInserts` `scheduled_date` correct for `day_index` 1 and 28
 
 ### Phase 3: Service & Generate Endpoint
 
