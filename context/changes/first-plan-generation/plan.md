@@ -409,11 +409,11 @@ No schema migration — `plans`/`plan_sessions` already exist (F-01). Only env v
 
 #### Automated
 
-- [x] 5.1 Lint + build still pass: `npm run lint && npm run build`
-- [x] 5.2 No doc claims an Anthropic SDK is installed
+- [x] 5.1 Lint + build still pass: `npm run lint && npm run build` — 06cbeff
+- [x] 5.2 No doc claims an Anthropic SDK is installed — 06cbeff
 
 #### Manual
 
-- [x] 5.3 E2E pass for all three equipment types on the paid model; plans correct and equipment-adapted
-- [x] 5.4 `generation_metadata` records model + usage per plan
-- [x] 5.5 Roadmap/tech-stack/change.md agree on the AI gateway (OpenRouter)
+- [x] 5.3 E2E pass for all three equipment types on the paid model; plans correct and equipment-adapted — 06cbeff
+- [x] 5.4 `generation_metadata` records model + usage per plan — 06cbeff
+- [x] 5.5 Roadmap/tech-stack/change.md agree on the AI gateway (OpenRouter) — 06cbeff
