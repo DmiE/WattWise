@@ -392,18 +392,18 @@ No schema migration — `plans`/`plan_sessions` already exist (F-01). Only env v
 
 #### Automated
 
-- [ ] 4.1 Lint + type check pass: `npm run lint`
-- [ ] 4.2 Build succeeds: `npm run build`
-- [ ] 4.3 No Next.js directives; hooks under `src/components/hooks/`
+- [x] 4.1 Lint + type check pass: `npm run lint`
+- [x] 4.2 Build succeeds: `npm run build`
+- [x] 4.3 No Next.js directives; hooks under `src/components/hooks/`
 
 #### Manual
 
-- [ ] 4.4 Onboarding → `/dashboard` shows progress then the plan
-- [ ] 4.5 Overview shows sessions only on available days; rest days empty
-- [ ] 4.6 Expanded session shows watts / HR zones / RPE per equipment type
-- [ ] 4.7 Reload shows same plan instantly (no regeneration)
-- [ ] 4.8 Forced failure shows retry state; retry succeeds
-- [ ] 4.9 Responsive/legible on mobile width
+- [x] 4.4 Onboarding → `/dashboard` shows progress then the plan
+- [x] 4.5 Overview shows sessions only on available days; rest days empty
+- [x] 4.6 Expanded session shows watts / HR zones / RPE per equipment type
+- [x] 4.7 Reload shows same plan instantly (no regeneration)
+- [x] 4.8 Forced failure shows retry state; retry succeeds
+- [x] 4.9 Responsive/legible on mobile width
 
 ### Phase 5: Docs Reconciliation & End-to-End Verification
 

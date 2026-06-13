@@ -1,33 +1,44 @@
 ---
 import Layout from "@/layouts/Layout.astro";
+import PlanView from "@/components/plan/PlanView";
+import { createClient } from "@/lib/supabase";
+import { getActivePlan, getPlanWithSessions, type PlanWithSessions } from "@/lib/services/plan";
 
 const { user } = Astro.locals;
+
+// Fetch the active plan (with its sessions) server-side. When the user has no
+// active plan, `plan` stays null and the island generates one on load. The
+// generate endpoint reloads on success, so this server path always supplies the
+// full plan + sessions to render.
+let plan: PlanWithSessions | null = null;
+if (user) {
+  const supabase = createClient(Astro.request.headers, Astro.cookies);
+  if (supabase) {
+    const active = await getActivePlan(supabase, user.id);
+    if (active) {
+      plan = await getPlanWithSessions(supabase, active.id);
+    }
+  }
+}
 ---
 
 <Layout title="Dashboard">
-  <div class="bg-cosmic flex min-h-screen items-center justify-center p-4">
-    <div class="rounded-2xl border border-white/10 bg-white/10 p-8 text-center text-white backdrop-blur-xl">
-      <h1 class="mb-4 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-3xl font-bold text-transparent">
-        Dashboard
-      </h1>
-      <p class="text-blue-100/80">
-        Welcome, <span class="font-semibold text-white">{user?.email}</span>
-      </p>
-      <div class="mt-6 rounded-xl border border-white/10 bg-white/5 p-6">
-        <h2 class="text-lg font-semibold text-white">Your 4-week plan is coming</h2>
-        <p class="mt-2 text-sm text-blue-100/70">
-          Thanks for setting up your profile. We're getting ready to generate your personalized training plan — check
-          back soon.
-        </p>
-      </div>
-      <form method="POST" action="/api/auth/signout" class="mt-6">
+  <div class="bg-cosmic flex min-h-screen flex-col items-center p-4">
+    <div class="flex w-full max-w-2xl items-center justify-between py-4 text-white">
+      <span class="text-sm text-blue-100/70">
+        <span class="font-semibold text-white">{user?.email}</span>
+      </span>
+      <form method="POST" action="/api/auth/signout">
         <button
           type="submit"
-          class="rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm transition-colors hover:bg-white/20"
+          class="rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm text-white transition-colors hover:bg-white/20"
         >
           Sign out
         </button>
       </form>
+    </div>
+    <div class="flex w-full flex-1 items-start justify-center pt-4">
+      <PlanView client:load plan={plan} />
     </div>
   </div>
 </Layout>

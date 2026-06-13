@@ -1,5 +1,7 @@
 import type { createClient } from "@/lib/supabase";
-import type { Plan, PlanInsert, PlanSession, PlanSessionInsert } from "@/types";
+import type { Plan, PlanInsert, PlanSessionInsert, PlanSessionView, PlanWithSessions } from "@/types";
+
+export type { PlanWithSessions };
 
 // Thin plan data-access layer, mirroring `profile.ts`: the caller's SSR client
 // is injected as the first arg so every query runs under their Supabase RLS
@@ -14,12 +16,6 @@ type SupabaseClient = NonNullable<ReturnType<typeof createClient>>;
 // a second active plan is inserted for the same user — which we treat as an
 // idempotent win, not an error (see `persistPlan`).
 const PG_UNIQUE_VIOLATION = "23505";
-
-/** A plan plus its sessions ordered by day_index, for rendering. */
-export interface PlanWithSessions {
-  plan: Plan;
-  sessions: PlanSession[];
-}
 
 /** The caller's current active plan, or null when they have none. */
 export async function getActivePlan(supabase: SupabaseClient, userId: string): Promise<Plan | null> {
@@ -54,7 +50,9 @@ export async function getPlanWithSessions(supabase: SupabaseClient, planId: stri
     throw new Error(`getPlanWithSessions (sessions) failed: ${sessionsError.message}`);
   }
 
-  return { plan, sessions };
+  // `structure` is `Json` at the DB layer; every persisted session passed
+  // `validateGeneratedPlan`, so narrowing to the segment union here is sound.
+  return { plan, sessions: sessions as PlanSessionView[] };
 }
 
 export type PersistPlanResult = { plan: Plan } | { error: string };

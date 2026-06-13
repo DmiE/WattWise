@@ -18,6 +18,22 @@ export type PlanSession = Database["public"]["Tables"]["plan_sessions"]["Row"];
 export type PlanSessionInsert = Database["public"]["Tables"]["plan_sessions"]["Insert"];
 export type PlanSessionUpdate = Database["public"]["Tables"]["plan_sessions"]["Update"];
 
+// View types for the dashboard plan island. The DB types `structure` only as
+// `Json`; these narrow it to the validated segment shape defined in
+// `plan-schema.ts` (every persisted plan passed `validateGeneratedPlan`, so the
+// narrowing is sound at the render boundary).
+export type { PlanSegment, PlanTarget, SessionStructure } from "@/lib/plan-schema";
+import type { SessionStructure } from "@/lib/plan-schema";
+
+/** A `plan_sessions` row with `structure` narrowed to the segment union. */
+export type PlanSessionView = Omit<PlanSession, "structure"> & { structure: SessionStructure };
+
+/** A plan plus its sessions (ordered by day_index), narrowed for rendering. */
+export interface PlanWithSessions {
+  plan: Plan;
+  sessions: PlanSessionView[];
+}
+
 export type SessionLog = Database["public"]["Tables"]["session_logs"]["Row"];
 export type SessionLogInsert = Database["public"]["Tables"]["session_logs"]["Insert"];
 export type SessionLogUpdate = Database["public"]["Tables"]["session_logs"]["Update"];
