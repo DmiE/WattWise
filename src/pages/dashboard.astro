@@ -14,9 +14,17 @@ let plan: PlanWithSessions | null = null;
 if (user) {
   const supabase = createClient(Astro.request.headers, Astro.cookies);
   if (supabase) {
-    const active = await getActivePlan(supabase, user.id);
-    if (active) {
-      plan = await getPlanWithSessions(supabase, active.id);
+    try {
+      const active = await getActivePlan(supabase, user.id);
+      if (active) {
+        plan = await getPlanWithSessions(supabase, active.id);
+      }
+    } catch {
+      // A transient read failure shouldn't 500 the whole dashboard (and lock
+      // the user out of sign-out). Leave `plan` null: the island attempts
+      // generation, and the generate route — which is idempotent — returns the
+      // existing plan or a friendly error. Mirrors generate.ts:45-49.
+      plan = null;
     }
   }
 }

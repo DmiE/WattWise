@@ -31,7 +31,7 @@ function PlanGenerating() {
 
   if (status === "error") {
     return (
-      <Panel>
+      <Panel role="alert">
         <h2 className="text-lg font-semibold text-white">We couldn&apos;t build your plan</h2>
         <p className="mt-2 text-sm text-blue-100/70">{error}</p>
         <Button type="button" onClick={retry} className="mt-5 bg-white/15 text-white hover:bg-white/25">
@@ -240,9 +240,12 @@ function formatTarget(segment: PlanSegment): string {
 
 // --- shared shell ---
 
-function Panel({ children }: { children: React.ReactNode }) {
+function Panel({ children, role }: { children: React.ReactNode; role?: string }) {
   return (
-    <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/10 p-8 text-center text-white backdrop-blur-xl">
+    <div
+      role={role}
+      className="w-full max-w-md rounded-2xl border border-white/10 bg-white/10 p-8 text-center text-white backdrop-blur-xl"
+    >
       {children}
     </div>
   );

@@ -1,4 +1,5 @@
 import type { Database } from "@/db/database.types";
+import type { SessionStructure } from "@/lib/plan-schema";
 
 export type { Database };
 
@@ -23,7 +24,6 @@ export type PlanSessionUpdate = Database["public"]["Tables"]["plan_sessions"]["U
 // `plan-schema.ts` (every persisted plan passed `validateGeneratedPlan`, so the
 // narrowing is sound at the render boundary).
 export type { PlanSegment, PlanTarget, SessionStructure } from "@/lib/plan-schema";
-import type { SessionStructure } from "@/lib/plan-schema";
 
 /** A `plan_sessions` row with `structure` narrowed to the segment union. */
 export type PlanSessionView = Omit<PlanSession, "structure"> & { structure: SessionStructure };
