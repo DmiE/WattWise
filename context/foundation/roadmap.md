@@ -3,7 +3,7 @@ project: WattWise
 version: 1
 status: draft
 created: 2026-05-31
-updated: 2026-06-10
+updated: 2026-06-13
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -31,7 +31,7 @@ Amateur road cyclists who already know their FTP have no tool that converts thei
 | ---- | ----------------------- | ------------------------------------------------------------------------------------ | ------------- | --------------------------- | -------- |
 | F-01 | data-schema-and-rls     | (foundation) MVP schema live; profile, plan, and session tables with RLS in place    | —             | §NFRs (data privacy)        | done     |
 | S-01 | onboarding-wizard       | complete the onboarding wizard and see a confirmation screen; data persists          | F-01          | FR-001, FR-002, FR-003, US-01 | done     |
-| S-02 | first-plan-generation   | confirm inputs and receive a 4-week AI plan with equipment-adapted intensity targets | S-01          | FR-004, FR-005, FR-006, US-01 | proposed |
+| S-02 | first-plan-generation   | confirm inputs and receive a 4-week AI plan with equipment-adapted intensity targets | S-01          | FR-004, FR-005, FR-006, US-01 | done     |
 | S-04 | profile-editing         | edit goal, availability, age, and weight after onboarding                            | S-01          | FR-010                      | proposed |
 | S-03 | session-tracking        | mark any session done (with log) or skipped                                          | S-02          | FR-007, FR-008              | proposed |
 | S-07 | intensity-reference     | see zone definitions or RPE scale within a session view                              | S-02          | FR-011                      | proposed |
@@ -107,7 +107,7 @@ Foundations below assume these layers are present and do NOT re-scaffold them.
   - ~~What prompt structure reliably produces a correctly structured 4-week plan with equipment-appropriate intensity targets across all three equipment types?~~ **Resolved:** a system+user prompt builder (`src/lib/plan.ts`, versioned via `prompt_version`) carrying the weekday anchor, equipment→target-kind mapping, and duration caps, enforced by a zod + equipment/availability refinement trust boundary, reliably yields valid plans across all three equipment types.
   - ~~Which Anthropic model balances plan quality and latency within "a normal loading wait" (PRD NFR)?~~ **Resolved:** routed via OpenRouter to a config-driven model; `anthropic/claude-sonnet-4.5` verified — cold generation ~22–23s, within the progress-UI-covered wait.
 - **Risk:** The riskiest technical bet — the hypothesis that an AI model can map FTP + goal + availability to a correct, equipment-adapted plan — is tested here for the first time. Sequenced as the second slice (immediately after onboarding) so this risk surfaces while the codebase is still small and a course-correction is cheap. A failed plan here is far cheaper to fix than discovering the same failure after session tracking and renewal are built on top.
-- **Status:** proposed
+- **Status:** done
 
 ---
 
@@ -215,3 +215,4 @@ Foundations below assume these layers are present and do NOT re-scaffold them.
 
 - **F-01: (foundation) All MVP database tables exist in Supabase with correct Row-Level Security policies: user profile, training plans, plan sessions, and session logs. The auth layer can safely write and read user-scoped data before any vertical slice begins.** — Archived 2026-06-07 → `context/archive/2026-05-31-data-schema-and-rls/`. Lesson: —.
 - **S-01: User can complete the onboarding wizard — declaring training goal, equipment type, FTP (or a fitness-level estimate via the "I don't know my FTP" path), age, weight, and weekly availability — and see a confirmation/review screen before triggering plan generation. All data persists across browser close.** — Archived 2026-06-10 → `context/archive/2026-06-07-onboarding-wizard/`. Lesson: —.
+- **S-02: User can confirm their onboarding inputs and immediately receive an AI-generated 4-week training plan. Every session shows type, duration, and intensity targets adapted to declared equipment: watts for power-meter users, heart-rate zones for HRM users, RPE descriptions for users with no equipment. The plan is presented as a week-overview with session detail accessible per session.** — Archived 2026-06-13 → `context/archive/2026-06-10-first-plan-generation/`. Lesson: —.
