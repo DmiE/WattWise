@@ -39,7 +39,13 @@ export function weekdayForDayIndex(dayIndex: number): string {
 }
 
 export interface PlanValidationIssue {
-  code: "schema" | "equipment_mismatch" | "unavailable_day" | "duration_over_cap" | "duplicate_day";
+  code:
+    | "schema"
+    | "equipment_mismatch"
+    | "unavailable_day"
+    | "duration_over_cap"
+    | "duration_mismatch"
+    | "duplicate_day";
   message: string;
 }
 
@@ -51,7 +57,8 @@ export type PlanValidationResult = { ok: true; plan: GeneratedPlan } | { ok: fal
  *   (a) every segment target.kind matches the equipment's required kind,
  *   (b) every session's day falls on an available weekday,
  *   (c) planned_duration_min ≤ the day-type cap,
- *   (d) day_index values are unique (and 1–28, already covered by zod).
+ *   (d) planned_duration_min equals the sum of its segment durations,
+ *   (e) day_index values are unique (and 1–28, already covered by zod).
  *
  * Any failure returns `{ ok: false, issues }` — the orchestrator treats this as
  * retryable, never coerces. A pass returns the typed plan.
@@ -93,6 +100,17 @@ export function validateGeneratedPlan(raw: unknown, profile: Profile): PlanValid
       issues.push({
         code: "duration_over_cap",
         message: `Session on day_index ${session.day_index} is ${session.planned_duration_min}min, over the ${cap}min cap`,
+      });
+    }
+
+    // The prompt and JSON schema both require planned_duration_min to equal the
+    // sum of segment durations; enforce it here so the cap check and the UI,
+    // which both key off planned_duration_min, can trust it.
+    const segmentSum = session.structure.segments.reduce((acc, segment) => acc + segment.duration_min, 0);
+    if (segmentSum !== session.planned_duration_min) {
+      issues.push({
+        code: "duration_mismatch",
+        message: `Session on day_index ${session.day_index}: segments sum to ${segmentSum}min but planned_duration_min is ${session.planned_duration_min}min`,
       });
     }
 

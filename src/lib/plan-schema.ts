@@ -37,7 +37,18 @@ const rpeTarget = z.object({
   description: z.string().min(1),
 });
 
-export const targetSchema = z.discriminatedUnion("kind", [wattsTarget, hrZoneTarget, rpeTarget]);
+// Discriminated on `kind`; the refinement then asserts the low bound never
+// exceeds the high bound (a reversed range passes the per-field bounds but is
+// nonsense). Refining the union — not the members — keeps each member a plain
+// object so the discriminator still resolves cleanly.
+export const targetSchema = z
+  .discriminatedUnion("kind", [wattsTarget, hrZoneTarget, rpeTarget])
+  .refine(
+    (t) => (t.kind === "watts" ? t.low_watts <= t.high_watts : t.kind === "hr_zone" ? t.low_bpm <= t.high_bpm : true),
+    {
+      message: "intensity range low bound must be ≤ high bound",
+    },
+  );
 
 // A single block within a session (warm-up, interval, recovery, …).
 export const segmentSchema = z.object({
