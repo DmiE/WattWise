@@ -375,16 +375,18 @@ No schema migration — `plans`/`plan_sessions` already exist (F-01). Only env v
 
 #### Automated
 
-- [ ] 3.1 Lint + type check pass: `npm run lint`
-- [ ] 3.2 Build succeeds: `npm run build`
-- [ ] 3.3 Route exports `prerender = false` and uppercase `POST`
+- [x] 3.1 Lint + type check pass: `npm run lint`
+- [x] 3.2 Build succeeds: `npm run build`
+- [x] 3.3 Route exports `prerender = false` and uppercase `POST`
 
 #### Manual
 
-- [ ] 3.4 First call generates+persists one active plan with sessions; second returns same plan, no new LLM call
-- [ ] 3.5 Forced invalid output retries then friendly error; nothing persisted (no orphan plan)
-- [ ] 3.6 RLS holds: row `user_id` is caller; sessions resolve via parent
-- [ ] 3.7 Exactly one active plan after repeated calls
+- [x] 3.4 First call generates+persists one active plan with sessions; second returns same plan, no new LLM call
+- [x] 3.5 Forced invalid output retries then friendly error; nothing persisted (no orphan plan)
+- [x] 3.6 RLS holds: row `user_id` is caller; sessions resolve via parent (single-user; cross-user unverified — see phase-3-manual-test.md)
+- [x] 3.7 Exactly one active plan after repeated calls
+
+> 3.4–3.7 executed 2026-06-13 — all passed. Evidence in `phase-3-manual-test.md`.
 
 ### Phase 4: Dashboard Plan View
 
