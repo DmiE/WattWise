@@ -9,8 +9,10 @@ tech_stack:
   framework: Astro 6 SSR
   runtime: Cloudflare workerd (via @astrojs/cloudflare adapter)
   database: Supabase (external, PostgreSQL)
-  ai: OpenRouter / Anthropic (external)
+  ai: OpenRouter (OpenAI-compatible REST → Anthropic model; plain fetch, no SDK)
 ---
+
+> **S-02 reconciliation (2026-06-13):** This research predates the AI integration and assumed an `@anthropic-ai/sdk` dependency. The implemented gateway is **OpenRouter** called with plain `fetch` (no vendor SDK) over a **single non-streaming** structured request. This sidesteps the two SDK-specific failure modes flagged below (streaming-under-`workerd`, `@anthropic-ai/sdk` transitive Node-API imports) — see the inline notes and the Risk Register. The CPU-time, `nodejs_compat`/process-v2, Smart-Placement, and Pages-vs-Workers risks are unaffected and still stand.
 
 ## Recommendation
 
@@ -59,11 +61,11 @@ Also scored 5/5 on criteria, but carries two soft penalties. First, an active As
 
 ### Devil's Advocate — Weaknesses
 
-1. **30ms CPU time limit on free tier**: Workers bills and limits on CPU time (actual computation), not wall-clock time. I/O wait (Supabase queries, Anthropic API calls) doesn't count. But post-processing — parsing a 4-week plan JSON response, Zod validation, intensity mapping, DB batch write preparation — does. This is non-trivial for the plan-generation route and could silently hit the 30ms ceiling in production. The paid plan ($5/month) removes the CPU-time cap and is likely required at any real usage level.
+1. **30ms CPU time limit on free tier**: Workers bills and limits on CPU time (actual computation), not wall-clock time. I/O wait (Supabase queries, OpenRouter API calls) doesn't count. But post-processing — parsing a 4-week plan JSON response, Zod validation, intensity mapping, DB batch write preparation — does. This is non-trivial for the plan-generation route and could silently hit the 30ms ceiling in production. The paid plan ($5/month) removes the CPU-time cap and is likely required at any real usage level.
 
 2. **`nodejs_compat` + process v2 active bug**: With `compatibility_date >= 2025-09-15` combined with the `nodejs_compat` flag, a race condition causes `isNode` to return `true` in Astro's detection logic, making the adapter return an async-iterable response body that `workerd` rejects. The workaround is adding `disable_nodejs_process_v2` to `compatibility_flags` in `wrangler.toml`. This is fragile: any future `wrangler.toml` cleanup that drops the flag without checking will silently break production.
 
-3. **Transitive dependency edge runtime risk**: Both `@supabase/ssr` and `@anthropic-ai/sdk` rely on Node.js internals. `nodejs_compat` covers most — but not all — Node.js APIs. A minor version bump of either dependency can introduce a transitive import of an unsupported module (`vm`, `net`, `child_process`) that compiles successfully but crashes at runtime in `workerd`. Without a test runner configured, this would only be caught by a production outage.
+3. **Transitive dependency edge runtime risk**: `@supabase/ssr` relies on Node.js internals. `nodejs_compat` covers most — but not all — Node.js APIs. A minor version bump can introduce a transitive import of an unsupported module (`vm`, `net`, `child_process`) that compiles successfully but crashes at runtime in `workerd`. Without a test runner configured, this would only be caught by a production outage. _(S-02 note: this risk originally also named `@anthropic-ai/sdk`; the AI integration ships as plain `fetch` with no SDK, so the AI side no longer carries this risk class — only `@supabase/ssr` remains.)_
 
 4. **Edge PoP ↔ Supabase latency for single-region users**: Workers routes requests to the nearest edge PoP, not the nearest PoP to the Supabase instance. For a user near Supabase's region, this is fine. For a user far from Supabase, the request goes: user → nearby PoP → Supabase region → back. Smart Placement (`smart_placement = { mode = "on" }`) routes the Worker to the PoP closest to Supabase, reducing this round-trip — but it must be opted in explicitly.
 
@@ -71,11 +73,11 @@ Also scored 5/5 on criteria, but carries two soft penalties. First, an active As
 
 ### Pre-Mortem — How This Could Fail
 
-The team deployed WattWise (Astro 6 + Supabase SSR + Anthropic SDK) on Cloudflare Workers for the MVP. Six months in, three things broke down in sequence.
+The team deployed WattWise (Astro 6 + Supabase SSR + an AI gateway) on Cloudflare Workers for the MVP. Six months in, three things broke down in sequence. _(Two of the three below were SDK-specific; S-02 chose OpenRouter via plain `fetch` over a single non-streaming call, which averts both — they are retained as a record of the risks the design deliberately designed out.)_
 
-First, AI plan generation started silently returning truncated plans. The Anthropic SDK's streaming path uses Node.js `stream` primitives that `nodejs_compat` partially emulates. The bug only surfaced under real load — local `workerd` dev didn't replicate it because test payloads were smaller. Three days were spent isolating the issue before switching to non-streaming Anthropic calls with a polling timeout, which degraded the "continuous visible feedback" the PRD required and required re-architecture of the plan generation UX.
+First, AI plan generation started silently returning truncated plans. A vendor SDK's streaming path uses Node.js `stream` primitives that `nodejs_compat` partially emulates. The bug only surfaced under real load — local `workerd` dev didn't replicate it because test payloads were smaller. Three days were spent isolating the issue before switching to non-streaming calls with a polling timeout, which degraded the "continuous visible feedback" the PRD required and required re-architecture of the plan generation UX. _(Averted in S-02: the integration is non-streaming from day one — a single structured `fetch` call surfaced behind the dashboard progress UI — so there is no SDK streaming path to fail.)_
 
-Second, an `@anthropic-ai/sdk` minor version bump pulled a new transitive dependency using `vm` module internals beyond `nodejs_compat`'s scope. The build succeeded; production crashed. There is no test runner configured in the project, so the regression was discovered from user reports, not CI. Pinning the SDK version resolved it, but trust was damaged.
+Second, an AI-SDK minor version bump pulled a new transitive dependency using `vm` module internals beyond `nodejs_compat`'s scope. The build succeeded; production crashed. There is no test runner configured in the project, so the regression was discovered from user reports, not CI. Pinning the SDK version resolved it, but trust was damaged. _(Averted in S-02: no AI SDK is installed — the OpenRouter client is plain `fetch` — so there is no AI-SDK dependency to bump. The `@supabase/ssr` instance of this risk still stands.)_
 
 Third, the CPU time limit tripped on the plan-generation route. Post-processing a full 4-week plan (28 sessions, Zod validation, intensity mapping, Supabase batch write preparation) consumed 38ms CPU time. The free tier hard-cuts at 30ms with no warning — users on the free plan received silent 429s. Upgrading to Workers Paid ($5/month) fixed it, but was unbudgeted for a side project expected to run for free.
 
@@ -105,8 +107,8 @@ Third, the CPU time limit tripped on the plan-generation route. Post-processing 
 |---|---|---|---|---|
 | Plan-generation route exceeds 30ms CPU time on free tier | Devil's advocate | High | High | Upgrade to Workers Paid ($5/month) before launch; instrument plan route with CPU-time checkpoints during dev |
 | `nodejs_compat` + process v2 bug breaks SSR responses | Devil's advocate | Medium | High | Add `disable_nodejs_process_v2` to `compatibility_flags` in `wrangler.toml`; pin `compatibility_date` and test before bumping |
-| `@anthropic-ai/sdk` transitive dependency uses unsupported Node API | Pre-mortem | Medium | High | Pin `@anthropic-ai/sdk` to a tested minor version; audit `node_modules` for unsupported imports before each upgrade |
-| Anthropic SDK streaming fails under workerd runtime | Pre-mortem | Medium | Medium | Test non-streaming Anthropic calls as the primary path; use streaming only if confirmed to work in `workerd` locally |
+| ~~`@anthropic-ai/sdk` transitive dependency uses unsupported Node API~~ — **resolved (S-02)**: no AI SDK installed; OpenRouter client is plain `fetch` | Pre-mortem | n/a | n/a | Risk designed out — no AI-SDK dependency exists to bump (the `@supabase/ssr` row above still applies) |
+| ~~Anthropic SDK streaming fails under workerd runtime~~ — **resolved (S-02)**: integration is a single non-streaming `fetch` call | Pre-mortem | n/a | n/a | Risk designed out — non-streaming is the only path; no SDK streaming to fail |
 | Edge PoP ↔ Supabase latency adds unexpected round-trip time | Unknown unknowns | Medium | Low | Enable `smart_placement = { mode = "on" }` in `wrangler.toml` from day one |
 | Pages vs. Workers product ambiguity causes wrong deploy command | Unknown unknowns | High | Medium | Resolve before first deploy: confirm `wrangler.toml` shape matches Workers (not Pages) and update `npm run build` / `npm run preview` scripts accordingly |
 | Supabase SSR cookie handling breaks under Workers | Research finding | Low | High | Test auth flow end-to-end in `workerd` local dev before first deploy; verify `@supabase/ssr` cookie adapter works in workerd via `npm run dev` |

@@ -392,28 +392,28 @@ No schema migration — `plans`/`plan_sessions` already exist (F-01). Only env v
 
 #### Automated
 
-- [x] 4.1 Lint + type check pass: `npm run lint`
-- [x] 4.2 Build succeeds: `npm run build`
-- [x] 4.3 No Next.js directives; hooks under `src/components/hooks/`
+- [x] 4.1 Lint + type check pass: `npm run lint` — 9252775
+- [x] 4.2 Build succeeds: `npm run build` — 9252775
+- [x] 4.3 No Next.js directives; hooks under `src/components/hooks/` — 9252775
 
 #### Manual
 
-- [x] 4.4 Onboarding → `/dashboard` shows progress then the plan
-- [x] 4.5 Overview shows sessions only on available days; rest days empty
-- [x] 4.6 Expanded session shows watts / HR zones / RPE per equipment type
-- [x] 4.7 Reload shows same plan instantly (no regeneration)
-- [x] 4.8 Forced failure shows retry state; retry succeeds
-- [x] 4.9 Responsive/legible on mobile width
+- [x] 4.4 Onboarding → `/dashboard` shows progress then the plan — 9252775
+- [x] 4.5 Overview shows sessions only on available days; rest days empty — 9252775
+- [x] 4.6 Expanded session shows watts / HR zones / RPE per equipment type — 9252775
+- [x] 4.7 Reload shows same plan instantly (no regeneration) — 9252775
+- [x] 4.8 Forced failure shows retry state; retry succeeds — 9252775
+- [x] 4.9 Responsive/legible on mobile width — 9252775
 
 ### Phase 5: Docs Reconciliation & End-to-End Verification
 
 #### Automated
 
-- [ ] 5.1 Lint + build still pass: `npm run lint && npm run build`
-- [ ] 5.2 No doc claims an Anthropic SDK is installed
+- [x] 5.1 Lint + build still pass: `npm run lint && npm run build`
+- [x] 5.2 No doc claims an Anthropic SDK is installed
 
 #### Manual
 
-- [ ] 5.3 E2E pass for all three equipment types on the paid model; plans correct and equipment-adapted
-- [ ] 5.4 `generation_metadata` records model + usage per plan
-- [ ] 5.5 Roadmap/tech-stack/change.md agree on the AI gateway (OpenRouter)
+- [x] 5.3 E2E pass for all three equipment types on the paid model; plans correct and equipment-adapted
+- [x] 5.4 `generation_metadata` records model + usage per plan
+- [x] 5.5 Roadmap/tech-stack/change.md agree on the AI gateway (OpenRouter)

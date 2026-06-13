@@ -60,7 +60,7 @@ Foundations below assume these layers are present and do NOT re-scaffold them.
 - **Auth:** present — full Supabase SSR auth; `middleware.ts` enforces protected routes; FR-001 (register) and FR-003 (login/logout) are satisfied
 - **Deploy / infra:** partial — Cloudflare Workers target configured; GitHub Actions CI runs lint + build; no CD step
 - **Observability:** absent — no logging library, no error tracking, no metrics
-- **AI integration:** absent — Anthropic SDK not installed; no plan-generation routes or prompt logic (`tech-stack.md`: "must be wired in as a first step after scaffolding")
+- **AI integration:** present as of S-02 — OpenRouter (OpenAI-compatible REST, called with plain `fetch`, no vendor SDK) routing to a config-driven model (`OPENROUTER_MODEL`, currently `anthropic/claude-sonnet-4.5`); plan-generation route, prompt builder, and zod trust-boundary live under `src/lib/`. (Baseline through S-01 had no AI integration; the earlier "Anthropic SDK not installed" note is superseded.)
 
 ## Foundations
 
@@ -103,9 +103,9 @@ Foundations below assume these layers are present and do NOT re-scaffold them.
 - **Prerequisites:** S-01
 - **Parallel with:** S-04
 - **Blockers:** —
-- **Unknowns:**
-  - What prompt structure reliably produces a correctly structured 4-week plan with equipment-appropriate intensity targets across all three equipment types? — Owner: team. Block: no (explorable during implementation; prototype and verify before shipping).
-  - Which Anthropic model balances plan quality and latency within "a normal loading wait" (PRD NFR)? — Owner: team. Block: no.
+- **Unknowns:** _(both resolved in S-02 implementation, 2026-06-13)_
+  - ~~What prompt structure reliably produces a correctly structured 4-week plan with equipment-appropriate intensity targets across all three equipment types?~~ **Resolved:** a system+user prompt builder (`src/lib/plan.ts`, versioned via `prompt_version`) carrying the weekday anchor, equipment→target-kind mapping, and duration caps, enforced by a zod + equipment/availability refinement trust boundary, reliably yields valid plans across all three equipment types.
+  - ~~Which Anthropic model balances plan quality and latency within "a normal loading wait" (PRD NFR)?~~ **Resolved:** routed via OpenRouter to a config-driven model; `anthropic/claude-sonnet-4.5` verified — cold generation ~22–23s, within the progress-UI-covered wait.
 - **Risk:** The riskiest technical bet — the hypothesis that an AI model can map FTP + goal + availability to a correct, equipment-adapted plan — is tested here for the first time. Sequenced as the second slice (immediately after onboarding) so this risk surfaces while the codebase is still small and a course-correction is cheap. A failed plan here is far cheaper to fix than discovering the same failure after session tracking and renewal are built on top.
 - **Status:** proposed
 
