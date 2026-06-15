@@ -125,8 +125,6 @@ function PlanOverview({ plan }: { plan: PlanWithSessions }) {
   // (status + log) from the snapshot and surface a transient inline error.
   const setStatus = useCallback(
     (sessionId: string, input: SessionStatusUpdate) => {
-      const snapshot = sessions.find((s) => s.id === sessionId);
-      if (!snapshot) return;
       setError(null);
 
       // On `done`, attach the entered values as a local log so the detail
@@ -135,9 +133,18 @@ function PlanOverview({ plan }: { plan: PlanWithSessions }) {
         input.status === "done"
           ? { plan_session_id: sessionId, ...input.log, logged_at: new Date().toISOString() }
           : null;
-      setSessions((prev) =>
-        prev.map((s) => (s.id === sessionId ? { ...s, status: input.status, log: optimisticLog } : s)),
-      );
+
+      // Snapshot from the latest committed state inside the updater (not from a
+      // possibly-stale render closure) so a rollback always restores the true
+      // prior session rather than another in-flight optimistic value.
+      let captured: PlanSessionWithLog | undefined;
+      setSessions((prev) => {
+        captured = prev.find((s) => s.id === sessionId);
+        if (!captured) return prev;
+        return prev.map((s) => (s.id === sessionId ? { ...s, status: input.status, log: optimisticLog } : s));
+      });
+      if (!captured) return;
+      const snapshot = captured;
 
       void mutate(sessionId, input).then((result) => {
         if (!result.ok) {
@@ -146,7 +153,7 @@ function PlanOverview({ plan }: { plan: PlanWithSessions }) {
         }
       });
     },
-    [sessions, mutate],
+    [mutate],
   );
 
   return (
