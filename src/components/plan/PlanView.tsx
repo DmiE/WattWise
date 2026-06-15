@@ -1,10 +1,19 @@
-import { useState } from "react";
-import { Activity, Bike, Loader2, RefreshCw, Zap } from "lucide-react";
+import { useCallback, useState } from "react";
+import { Activity, Ban, Bike, Check, Loader2, RefreshCw, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { usePlanGeneration } from "@/components/hooks/usePlanGeneration";
-import type { PlanSegment, PlanSessionView, PlanWithSessions, SessionType } from "@/types";
+import { useSessionStatus } from "@/components/hooks/useSessionStatus";
+import type {
+  PlanSegment,
+  PlanSessionWithLog,
+  PlanWithSessions,
+  SessionLog,
+  SessionStatus,
+  SessionStatusUpdate,
+  SessionType,
+} from "@/types";
 
 /**
  * The dashboard plan island.
@@ -79,6 +88,14 @@ const SESSION_ICONS: Record<SessionType, typeof Bike> = {
   recovery: Activity,
 };
 
+// User-facing status copy. `pending` reads as "Planned" — the cyclist hasn't
+// acted on the session yet; "pending" is an internal enum value.
+const STATUS_LABELS: Record<SessionStatus, string> = {
+  pending: "Planned",
+  done: "Done",
+  skipped: "Skipped",
+};
+
 function weekdayLabel(dayIndex: number): string {
   return WEEKDAY_LABELS[(dayIndex - 1) % 7];
 }
@@ -95,7 +112,42 @@ function formatDate(iso: string): string {
 
 function PlanOverview({ plan }: { plan: PlanWithSessions }) {
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
-  const sessionByDay = new Map(plan.sessions.map((session) => [session.day_index, session]));
+  // Lift sessions into state (seeded from the server-rendered source of truth)
+  // so status/log changes can be applied optimistically.
+  const [sessions, setSessions] = useState<PlanSessionWithLog[]>(plan.sessions);
+  const [error, setError] = useState<string | null>(null);
+  const { mutate, pending } = useSessionStatus();
+  const sessionByDay = new Map(sessions.map((session) => [session.day_index, session]));
+
+  // Apply a status change optimistically, then persist. Kept synchronous (the
+  // POST runs in a fire-and-forget `.then`) so it can be passed straight to a
+  // void-returning click handler. On failure we restore the exact prior session
+  // (status + log) from the snapshot and surface a transient inline error.
+  const setStatus = useCallback(
+    (sessionId: string, input: SessionStatusUpdate) => {
+      const snapshot = sessions.find((s) => s.id === sessionId);
+      if (!snapshot) return;
+      setError(null);
+
+      // On `done`, attach the entered values as a local log so the detail
+      // renders them immediately without a refetch; clear it otherwise.
+      const optimisticLog: SessionLog | null =
+        input.status === "done"
+          ? { plan_session_id: sessionId, ...input.log, logged_at: new Date().toISOString() }
+          : null;
+      setSessions((prev) =>
+        prev.map((s) => (s.id === sessionId ? { ...s, status: input.status, log: optimisticLog } : s)),
+      );
+
+      void mutate(sessionId, input).then((result) => {
+        if (!result.ok) {
+          setSessions((prev) => prev.map((s) => (s.id === sessionId ? snapshot : s)));
+          setError(result.error);
+        }
+      });
+    },
+    [sessions, mutate],
+  );
 
   return (
     <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-white/10 p-5 text-white backdrop-blur-xl sm:p-7">
@@ -104,7 +156,7 @@ function PlanOverview({ plan }: { plan: PlanWithSessions }) {
           Your 4-week plan
         </h1>
         <p className="mt-1 text-sm text-blue-100/70">
-          {formatDate(plan.plan.start_date)} – {formatDate(plan.plan.end_date)} · {plan.sessions.length} sessions
+          {formatDate(plan.plan.start_date)} – {formatDate(plan.plan.end_date)} · {sessions.length} sessions
         </p>
       </header>
 
@@ -133,7 +185,17 @@ function PlanOverview({ plan }: { plan: PlanWithSessions }) {
                   />
                 ))}
               </div>
-              {expandedSession && <SessionDetail session={expandedSession} />}
+              {expandedSession && (
+                // key by session id so the inline form state resets when the
+                // user expands a different day.
+                <SessionDetail
+                  key={expandedSession.id}
+                  session={expandedSession}
+                  onSetStatus={setStatus}
+                  pending={pending}
+                  error={error}
+                />
+              )}
             </section>
           );
         })}
@@ -149,7 +211,7 @@ function DayCell({
   onToggle,
 }: {
   dayIndex: number;
-  session: PlanSessionView | undefined;
+  session: PlanSessionWithLog | undefined;
   expanded: boolean;
   onToggle: () => void;
 }) {
@@ -166,27 +228,79 @@ function DayCell({
   }
 
   const style = SESSION_STYLES[session.session_type];
+  const { status } = session;
   return (
     <button
       type="button"
       onClick={onToggle}
       aria-expanded={expanded}
-      aria-label={`${label}: ${session.title}, ${session.planned_duration_min} minutes`}
+      aria-label={`${label}: ${session.title}, ${session.planned_duration_min} minutes, ${STATUS_LABELS[status]}`}
       className={cn(
         "flex min-h-16 cursor-pointer flex-col items-center rounded-lg border px-1 py-1.5 text-center transition-colors",
-        expanded ? "border-white/40 bg-white/20" : "border-white/10 bg-white/10 hover:bg-white/15",
+        expanded
+          ? "border-white/40 bg-white/20"
+          : status === "done"
+            ? "border-emerald-400/40 bg-emerald-400/10 hover:bg-emerald-400/20"
+            : "border-white/10 bg-white/10 hover:bg-white/15",
+        status === "skipped" && !expanded && "opacity-50",
       )}
     >
       <span className="text-[10px] text-blue-100/60">{label}</span>
-      <span className={cn("mt-1 size-2 rounded-full", style.dot)} />
-      <span className="mt-auto text-[11px] font-medium text-white">{session.planned_duration_min}′</span>
+      {/* Status conveyed by icon + tint (not color alone): a check for done, a
+          slash for skipped, the session-type dot for planned. */}
+      {status === "done" ? (
+        <Check className="mt-1 size-3.5 text-emerald-300" aria-hidden />
+      ) : status === "skipped" ? (
+        <Ban className="mt-1 size-3.5 text-blue-100/50" aria-hidden />
+      ) : (
+        <span className={cn("mt-1 size-2 rounded-full", style.dot)} />
+      )}
+      <span
+        className={cn(
+          "mt-auto text-[11px] font-medium text-white",
+          status === "skipped" && "text-blue-100/50 line-through",
+        )}
+      >
+        {session.planned_duration_min}′
+      </span>
     </button>
   );
 }
 
-function SessionDetail({ session }: { session: PlanSessionView }) {
+function SessionDetail({
+  session,
+  onSetStatus,
+  pending,
+  error,
+}: {
+  session: PlanSessionWithLog;
+  onSetStatus: (sessionId: string, input: SessionStatusUpdate) => void;
+  pending: boolean;
+  error: string | null;
+}) {
   const style = SESSION_STYLES[session.session_type];
   const Icon = SESSION_ICONS[session.session_type];
+
+  // Inline action surface: idle (action buttons), the log form, or the skip
+  // confirm. No modal dependency.
+  const [mode, setMode] = useState<"idle" | "log" | "skip">("idle");
+  // Log form fields, prefilled from any existing log, else the plan defaults.
+  const [duration, setDuration] = useState(String(session.log?.actual_duration_min ?? session.planned_duration_min));
+  const [rating, setRating] = useState(session.log?.rating ?? 3);
+  const [km, setKm] = useState(session.log?.km_ridden != null ? String(session.log.km_ridden) : "");
+
+  const durationNum = Number(duration);
+  const kmNum = Number(km);
+  const canSave =
+    duration.trim() !== "" && Number.isFinite(durationNum) && km.trim() !== "" && Number.isFinite(kmNum) && kmNum > 0;
+
+  const saveLog = () => {
+    onSetStatus(session.id, {
+      status: "done",
+      log: { actual_duration_min: durationNum, rating, km_ridden: kmNum },
+    });
+    setMode("idle");
+  };
 
   return (
     <div className="mt-2 rounded-xl border border-white/15 bg-white/5 p-4">
@@ -221,8 +335,205 @@ function SessionDetail({ session }: { session: PlanSessionView }) {
           </li>
         ))}
       </ol>
+
+      <div className="mt-4 flex items-center gap-2 border-t border-white/10 pt-4 text-xs">
+        <span className="text-blue-100/50">Status</span>
+        <StatusBadge status={session.status} />
+      </div>
+
+      {session.status === "done" && session.log && (
+        <dl className="mt-3 grid grid-cols-3 gap-2 rounded-lg border border-emerald-400/20 bg-emerald-400/5 p-3 text-center text-xs">
+          <div>
+            <dt className="text-blue-100/50">Duration</dt>
+            <dd className="mt-0.5 font-medium text-white">{session.log.actual_duration_min} min</dd>
+          </div>
+          <div>
+            <dt className="text-blue-100/50">Rating</dt>
+            <dd className="mt-0.5 font-medium text-white">{session.log.rating} / 5</dd>
+          </div>
+          <div>
+            <dt className="text-blue-100/50">Distance</dt>
+            <dd className="mt-0.5 font-medium text-white">{session.log.km_ridden} km</dd>
+          </div>
+        </dl>
+      )}
+
+      {error && (
+        <p className="mt-3 text-xs text-red-300" role="alert">
+          {error}
+        </p>
+      )}
+
+      <div className="mt-4">
+        {mode === "idle" && (
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              onClick={() => {
+                setMode("log");
+              }}
+              disabled={pending}
+              className="bg-emerald-400/20 text-emerald-100 hover:bg-emerald-400/30"
+            >
+              <Check className="size-4" /> Mark done
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setMode("skip");
+              }}
+              disabled={pending}
+              className="bg-white/10 text-white hover:bg-white/20"
+            >
+              <Ban className="size-4" /> Skip
+            </Button>
+            {session.status !== "pending" && (
+              <Button
+                type="button"
+                onClick={() => {
+                  onSetStatus(session.id, { status: "pending" });
+                }}
+                disabled={pending}
+                className="bg-transparent text-blue-100/70 hover:bg-white/10"
+              >
+                <RefreshCw className="size-4" /> Reset to planned
+              </Button>
+            )}
+          </div>
+        )}
+
+        {mode === "log" && (
+          <div className="space-y-3">
+            <div className="flex flex-col gap-1">
+              <label htmlFor={`dur-${session.id}`} className="text-xs text-blue-100/60">
+                Duration (min)
+              </label>
+              <input
+                id={`dur-${session.id}`}
+                type="number"
+                min={1}
+                max={600}
+                value={duration}
+                onChange={(e) => {
+                  setDuration(e.target.value);
+                }}
+                className="w-32 rounded-md border border-white/15 bg-white/5 px-2 py-1.5 text-sm text-white"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-blue-100/60">Rating</span>
+              <div className="flex gap-1.5" role="group" aria-label="Rating, 1 to 5">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    aria-pressed={rating === n}
+                    onClick={() => {
+                      setRating(n);
+                    }}
+                    className={cn(
+                      "size-8 rounded-md border text-sm transition-colors",
+                      rating === n
+                        ? "border-blue-300 bg-blue-400/30 text-white"
+                        : "border-white/15 bg-white/5 text-blue-100/70 hover:bg-white/10",
+                    )}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor={`km-${session.id}`} className="text-xs text-blue-100/60">
+                Distance (km)
+              </label>
+              <input
+                id={`km-${session.id}`}
+                type="number"
+                min={0}
+                step="0.01"
+                value={km}
+                onChange={(e) => {
+                  setKm(e.target.value);
+                }}
+                className="w-32 rounded-md border border-white/15 bg-white/5 px-2 py-1.5 text-sm text-white"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                onClick={saveLog}
+                disabled={pending || !canSave}
+                className="bg-emerald-400/20 text-emerald-100 hover:bg-emerald-400/30"
+              >
+                Save
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  setMode("idle");
+                }}
+                disabled={pending}
+                className="bg-transparent text-blue-100/70 hover:bg-white/10"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {mode === "skip" && (
+          <div className="space-y-3">
+            <p className="text-sm text-blue-100/80">
+              Skip means you won&apos;t do this session — it won&apos;t be rescheduled.
+            </p>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                onClick={() => {
+                  onSetStatus(session.id, { status: "skipped" });
+                  setMode("idle");
+                }}
+                disabled={pending}
+                className="bg-white/10 text-white hover:bg-white/20"
+              >
+                Confirm skip
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  setMode("idle");
+                }}
+                disabled={pending}
+                className="bg-transparent text-blue-100/70 hover:bg-white/10"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
+}
+
+/** Status as icon + label (legible without relying on color alone). */
+function StatusBadge({ status }: { status: SessionStatus }) {
+  if (status === "done") {
+    return (
+      <span className="inline-flex items-center gap-1 font-medium text-emerald-300">
+        <Check className="size-3.5" aria-hidden /> Done
+      </span>
+    );
+  }
+  if (status === "skipped") {
+    return (
+      <span className="inline-flex items-center gap-1 font-medium text-blue-100/60">
+        <Ban className="size-3.5" aria-hidden /> Skipped
+      </span>
+    );
+  }
+  return <span className="font-medium text-blue-100/80">Planned</span>;
 }
 
 /** Format a segment's intensity target in its equipment-correct unit. */

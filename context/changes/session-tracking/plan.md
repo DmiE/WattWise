@@ -293,26 +293,26 @@ Apply with `npx supabase db push --linked`, then `npm run db:types`. The RPC is 
 
 #### Automated
 
-- [x] 2.1 Linting passes: `npm run lint`
-- [x] 2.2 Production build passes: `npm run build`
+- [x] 2.1 Linting passes: `npm run lint` — b8bad27
+- [x] 2.2 Production build passes: `npm run build` — b8bad27
 
 #### Manual
 
-- [x] 2.3 `done` with valid log returns 200 and persists (reload shows values)
-- [x] 2.4 `done` with missing/invalid log returns 400
-- [x] 2.5 Non-owned id → 404; unauthenticated → 401
+- [x] 2.3 `done` with valid log returns 200 and persists (reload shows values) — b8bad27
+- [x] 2.4 `done` with missing/invalid log returns 400 — b8bad27
+- [x] 2.5 Non-owned id → 404; unauthenticated → 401 — b8bad27
 
 ### Phase 3: UI + hook
 
 #### Automated
 
-- [ ] 3.1 Linting passes: `npm run lint`
-- [ ] 3.2 Production build passes: `npm run build`
+- [x] 3.1 Linting passes: `npm run lint`
+- [x] 3.2 Production build passes: `npm run build`
 
 #### Manual
 
-- [ ] 3.3 Mark done shows prefilled log form, saves; cell + detail reflect done with values; persists on reload
-- [ ] 3.4 Skip shows explanatory confirm copy; confirming marks skipped with no log persisted
-- [ ] 3.5 Reset returns session to pending and clears logged values
-- [ ] 3.6 Forced API failure rolls the cell back and shows an error
-- [ ] 3.7 Status encoding is legible without relying on color alone
+- [x] 3.3 Mark done shows prefilled log form, saves; cell + detail reflect done with values; persists on reload
+- [x] 3.4 Skip shows explanatory confirm copy; confirming marks skipped with no log persisted
+- [x] 3.5 Reset returns session to pending and clears logged values
+- [x] 3.6 Forced API failure rolls the cell back and shows an error
+- [x] 3.7 Status encoding is legible without relying on color alone
