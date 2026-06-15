@@ -279,28 +279,28 @@ Apply with `npx supabase db push --linked`, then `npm run db:types`. The RPC is 
 
 #### Automated
 
-- [x] 1.1 Migration applies cleanly: `npx supabase db push --linked`
-- [x] 1.2 Types regenerate and include the function: `npm run db:types`
-- [x] 1.3 Linting (type-checked) passes: `npm run lint`
-- [x] 1.4 Production build passes: `npm run build`
+- [x] 1.1 Migration applies cleanly: `npx supabase db push --linked` — 7eeed09
+- [x] 1.2 Types regenerate and include the function: `npm run db:types` — 7eeed09
+- [x] 1.3 Linting (type-checked) passes: `npm run lint` — 7eeed09
+- [x] 1.4 Production build passes: `npm run build` — 7eeed09
 
 #### Manual
 
-- [x] 1.5 RPC raises (0 rows) for a non-owned session id rather than mutating
-- [x] 1.6 `done` upserts a `session_logs` row; `skipped`/`pending` deletes it
+- [x] 1.5 RPC raises (0 rows) for a non-owned session id rather than mutating — 7eeed09
+- [x] 1.6 `done` upserts a `session_logs` row; `skipped`/`pending` deletes it — 7eeed09
 
 ### Phase 2: API route
 
 #### Automated
 
-- [ ] 2.1 Linting passes: `npm run lint`
-- [ ] 2.2 Production build passes: `npm run build`
+- [x] 2.1 Linting passes: `npm run lint`
+- [x] 2.2 Production build passes: `npm run build`
 
 #### Manual
 
-- [ ] 2.3 `done` with valid log returns 200 and persists (reload shows values)
-- [ ] 2.4 `done` with missing/invalid log returns 400
-- [ ] 2.5 Non-owned id → 404; unauthenticated → 401
+- [x] 2.3 `done` with valid log returns 200 and persists (reload shows values)
+- [x] 2.4 `done` with missing/invalid log returns 400
+- [x] 2.5 Non-owned id → 404; unauthenticated → 401
 
 ### Phase 3: UI + hook
 
