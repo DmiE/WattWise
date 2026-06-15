@@ -306,13 +306,13 @@ Apply with `npx supabase db push --linked`, then `npm run db:types`. The RPC is 
 
 #### Automated
 
-- [x] 3.1 Linting passes: `npm run lint`
-- [x] 3.2 Production build passes: `npm run build`
+- [x] 3.1 Linting passes: `npm run lint` — 4e8cec4
+- [x] 3.2 Production build passes: `npm run build` — 4e8cec4
 
 #### Manual
 
-- [x] 3.3 Mark done shows prefilled log form, saves; cell + detail reflect done with values; persists on reload
-- [x] 3.4 Skip shows explanatory confirm copy; confirming marks skipped with no log persisted
-- [x] 3.5 Reset returns session to pending and clears logged values
-- [x] 3.6 Forced API failure rolls the cell back and shows an error
-- [x] 3.7 Status encoding is legible without relying on color alone
+- [x] 3.3 Mark done shows prefilled log form, saves; cell + detail reflect done with values; persists on reload — 4e8cec4
+- [x] 3.4 Skip shows explanatory confirm copy; confirming marks skipped with no log persisted — 4e8cec4
+- [x] 3.5 Reset returns session to pending and clears logged values — 4e8cec4
+- [x] 3.6 Forced API failure rolls the cell back and shows an error — 4e8cec4
+- [x] 3.7 Status encoding is legible without relying on color alone — 4e8cec4
