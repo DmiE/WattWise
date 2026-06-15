@@ -224,7 +224,16 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      set_session_status: {
+        Args: {
+          p_actual_duration_min?: number;
+          p_km_ridden?: number;
+          p_rating?: number;
+          p_session_id: string;
+          p_status: Database["public"]["Enums"]["session_status"];
+        };
+        Returns: undefined;
+      };
     };
     Enums: {
       equipment_type: "power_meter" | "hrm" | "none";

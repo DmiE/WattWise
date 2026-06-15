@@ -1,5 +1,12 @@
 import type { createClient } from "@/lib/supabase";
-import type { Plan, PlanInsert, PlanSessionInsert, PlanSessionView, PlanWithSessions } from "@/types";
+import type {
+  Plan,
+  PlanInsert,
+  PlanSessionInsert,
+  PlanSessionView,
+  PlanSessionWithLog,
+  PlanWithSessions,
+} from "@/types";
 
 export type { PlanWithSessions };
 
@@ -41,9 +48,13 @@ export async function getPlanWithSessions(supabase: SupabaseClient, planId: stri
     return null;
   }
 
+  // Embed each session's log so a `done` session can render its logged values
+  // on server load. `session_logs.plan_session_id` is both the FK and the PK
+  // (unique), so PostgREST detects a to-one relationship and returns the embed
+  // as a single object or null — NOT an array; normalize directly, never `[0]`.
   const { data: sessions, error: sessionsError } = await supabase
     .from("plan_sessions")
-    .select("*")
+    .select("*, session_logs(*)")
     .eq("plan_id", planId)
     .order("day_index", { ascending: true });
   if (sessionsError) {
@@ -52,7 +63,14 @@ export async function getPlanWithSessions(supabase: SupabaseClient, planId: stri
 
   // `structure` is `Json` at the DB layer; every persisted session passed
   // `validateGeneratedPlan`, so narrowing to the segment union here is sound.
-  return { plan, sessions: sessions as PlanSessionView[] };
+  // The `session_logs` embed is a to-one (isOneToOne) so PostgREST returns it
+  // as a single object — and `null` at runtime for an unlogged session, which
+  // the `PlanSessionWithLog.log` type (`SessionLog | null`) reflects.
+  const withLogs: PlanSessionWithLog[] = sessions.map(({ session_logs, ...session }) => ({
+    ...(session as PlanSessionView),
+    log: session_logs,
+  }));
+  return { plan, sessions: withLogs };
 }
 
 export type PersistPlanResult = { plan: Plan } | { error: string };
