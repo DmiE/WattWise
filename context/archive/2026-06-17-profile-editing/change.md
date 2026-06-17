@@ -1,10 +1,10 @@
 ---
 change_id: profile-editing
 title: Edit profile (goal, availability, age, weight) after onboarding — no FTP
-status: impl_reviewed
+status: archived
 created: 2026-06-17
 updated: 2026-06-17
-archived_at: null
+archived_at: 2026-06-17T21:14:00Z
 ---
 
 ## Notes
