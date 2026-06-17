@@ -211,14 +211,14 @@ No schema migration — all six columns and their constraints already exist. No 
 
 #### Automated
 
-- [x] 2.1 Type checking + lint pass: `npm run lint`
-- [x] 2.2 Production build succeeds: `npm run build`
+- [x] 2.1 Type checking + lint pass: `npm run lint` — 0a91b5d
+- [x] 2.2 Production build succeeds: `npm run build` — 0a91b5d
 
 #### Manual
 
-- [x] 2.3 `/profile` redirects unauthenticated; loads pre-filled for onboarded user
-- [x] 2.4 Each editable field persists and round-trips on reload
-- [x] 2.5 Save disabled until dirty; re-disables after successful save
-- [x] 2.6 Read-only block correct per equipment type with renewal note
-- [x] 2.7 Invalid input shows inline error and blocks Save
-- [x] 2.8 Active plan unchanged after editing availability/goal
+- [x] 2.3 `/profile` redirects unauthenticated; loads pre-filled for onboarded user — 0a91b5d
+- [x] 2.4 Each editable field persists and round-trips on reload — 0a91b5d
+- [x] 2.5 Save disabled until dirty; re-disables after successful save — 0a91b5d
+- [x] 2.6 Read-only block correct per equipment type with renewal note — 0a91b5d
+- [x] 2.7 Invalid input shows inline error and blocks Save — 0a91b5d
+- [x] 2.8 Active plan unchanged after editing availability/goal — 0a91b5d

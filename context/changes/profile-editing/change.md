@@ -1,7 +1,7 @@
 ---
 change_id: profile-editing
 title: Edit profile (goal, availability, age, weight) after onboarding — no FTP
-status: implementing
+status: implemented
 created: 2026-06-17
 updated: 2026-06-17
 archived_at: null
