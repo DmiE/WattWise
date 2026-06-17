@@ -198,14 +198,14 @@ No schema migration — all six columns and their constraints already exist. No 
 
 #### Automated
 
-- [ ] 1.1 Type checking + lint pass: `npm run lint`
-- [ ] 1.2 Production build succeeds: `npm run build`
+- [x] 1.1 Type checking + lint pass: `npm run lint`
+- [x] 1.2 Production build succeeds: `npm run build`
 
 #### Manual
 
-- [ ] 1.3 `PATCH /api/profile` with no session returns 401
-- [ ] 1.4 Valid body updates the six columns and leaves equipment/FTP columns unchanged
-- [ ] 1.5 Out-of-bounds value returns 400 with `fieldErrors` and does not write
+- [x] 1.3 `PATCH /api/profile` with no session returns 401
+- [x] 1.4 Valid body updates the six columns and leaves equipment/FTP columns unchanged
+- [x] 1.5 Out-of-bounds value returns 400 with `fieldErrors` and does not write
 
 ### Phase 2: Profile page, form island, and entry point
 

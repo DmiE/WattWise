@@ -1,5 +1,6 @@
 import type { createClient } from "@/lib/supabase";
 import type { Profile, ProfileInsert } from "@/types";
+import type { ProfileEditInput } from "@/lib/profile-edit-schema";
 
 // Thin profile data-access layer shared by the onboarding API route (writes)
 // and middleware gating (reads). All calls go through the caller's SSR client
@@ -27,5 +28,21 @@ export async function upsertProfile(
   insert: ProfileInsert,
 ): Promise<{ error: { message: string } | null }> {
   const { error } = await supabase.from("profiles").upsert(insert, { onConflict: "user_id" });
+  return { error: error ? { message: error.message } : null };
+}
+
+/**
+ * Update only the six FR-010-editable columns for the caller's own row, scoped
+ * by `user_id` under RLS. Touches none of the equipment/FTP/fitness-level/max-HR
+ * columns, so the cross-field CHECK constraints can't be violated regardless of
+ * the row's equipment branch — no server-side derivation needed (unlike
+ * `upsertProfile`, which rebuilds the full row).
+ */
+export async function updateProfileFields(
+  supabase: SupabaseClient,
+  userId: string,
+  fields: ProfileEditInput,
+): Promise<{ error: { message: string } | null }> {
+  const { error } = await supabase.from("profiles").update(fields).eq("user_id", userId);
   return { error: error ? { message: error.message } : null };
 }

@@ -21,7 +21,7 @@ const fitnessLevelSchema = z.enum(FITNESS_LEVELS);
 // Common, equipment-independent fields. Per-step schemas are derived from this
 // via `.pick(...)`, and the full union spreads its `.shape`, so each bound is
 // declared exactly once here.
-const commonFields = z.object({
+export const commonFields = z.object({
   goal: goalSchema,
   age: z.number().int().min(14).max(100),
   weight_kg: z.number().min(30).max(200),
