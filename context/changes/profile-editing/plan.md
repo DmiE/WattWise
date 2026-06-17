@@ -198,27 +198,27 @@ No schema migration — all six columns and their constraints already exist. No 
 
 #### Automated
 
-- [x] 1.1 Type checking + lint pass: `npm run lint`
-- [x] 1.2 Production build succeeds: `npm run build`
+- [x] 1.1 Type checking + lint pass: `npm run lint` — a880e7b
+- [x] 1.2 Production build succeeds: `npm run build` — a880e7b
 
 #### Manual
 
-- [x] 1.3 `PATCH /api/profile` with no session returns 401
-- [x] 1.4 Valid body updates the six columns and leaves equipment/FTP columns unchanged
-- [x] 1.5 Out-of-bounds value returns 400 with `fieldErrors` and does not write
+- [x] 1.3 `PATCH /api/profile` with no session returns 401 — a880e7b
+- [x] 1.4 Valid body updates the six columns and leaves equipment/FTP columns unchanged — a880e7b
+- [x] 1.5 Out-of-bounds value returns 400 with `fieldErrors` and does not write — a880e7b
 
 ### Phase 2: Profile page, form island, and entry point
 
 #### Automated
 
-- [ ] 2.1 Type checking + lint pass: `npm run lint`
-- [ ] 2.2 Production build succeeds: `npm run build`
+- [x] 2.1 Type checking + lint pass: `npm run lint`
+- [x] 2.2 Production build succeeds: `npm run build`
 
 #### Manual
 
-- [ ] 2.3 `/profile` redirects unauthenticated; loads pre-filled for onboarded user
-- [ ] 2.4 Each editable field persists and round-trips on reload
-- [ ] 2.5 Save disabled until dirty; re-disables after successful save
-- [ ] 2.6 Read-only block correct per equipment type with renewal note
-- [ ] 2.7 Invalid input shows inline error and blocks Save
-- [ ] 2.8 Active plan unchanged after editing availability/goal
+- [x] 2.3 `/profile` redirects unauthenticated; loads pre-filled for onboarded user
+- [x] 2.4 Each editable field persists and round-trips on reload
+- [x] 2.5 Save disabled until dirty; re-disables after successful save
+- [x] 2.6 Read-only block correct per equipment type with renewal note
+- [x] 2.7 Invalid input shows inline error and blocks Save
+- [x] 2.8 Active plan unchanged after editing availability/goal

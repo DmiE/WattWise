@@ -36,14 +36,22 @@ if (user) {
       <span class="text-sm text-blue-100/70">
         <span class="font-semibold text-white">{user?.email}</span>
       </span>
-      <form method="POST" action="/api/auth/signout">
-        <button
-          type="submit"
+      <div class="flex items-center gap-2">
+        <a
+          href="/profile"
           class="rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm text-white transition-colors hover:bg-white/20"
         >
-          Sign out
-        </button>
-      </form>
+          Profile
+        </a>
+        <form method="POST" action="/api/auth/signout">
+          <button
+            type="submit"
+            class="rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm text-white transition-colors hover:bg-white/20"
+          >
+            Sign out
+          </button>
+        </form>
+      </div>
     </div>
     <div class="flex w-full flex-1 items-start justify-center pt-4">
       <PlanView client:load plan={plan} />

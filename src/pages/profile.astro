@@ -1,0 +1,49 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import ProfileForm from "@/components/profile/ProfileForm";
+import { createClient } from "@/lib/supabase";
+import { getProfile } from "@/lib/services/profile";
+import type { Profile } from "@/types";
+
+// Auth is gated centrally in middleware (/profile is in PROTECTED_ROUTES), so an
+// unauthenticated request never reaches this page. Server-fetch the profile and
+// pass it to the island as a prop — same pattern as dashboard.astro.
+const { user } = Astro.locals;
+
+let profile: Profile | null = null;
+if (user) {
+  const supabase = createClient(Astro.request.headers, Astro.cookies);
+  if (supabase) {
+    try {
+      profile = await getProfile(supabase, user.id);
+    } catch {
+      // getProfile throws on a transient read failure. Don't bounce an onboarded
+      // user into onboarding over a blip — send them back to the dashboard,
+      // mirroring dashboard.astro's fail-open posture (don't 500 the page).
+      return Astro.redirect("/dashboard");
+    }
+  }
+}
+
+// No profile row → user hasn't onboarded. Defensive cover (middleware already
+// gates this) — route them to onboarding.
+if (!profile) {
+  return Astro.redirect("/onboarding");
+}
+---
+
+<Layout title="Your profile">
+  <div class="bg-cosmic flex min-h-screen flex-col items-center p-4">
+    <div class="flex w-full max-w-lg items-center justify-between py-4 text-white">
+      <a
+        href="/dashboard"
+        class="rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm text-white transition-colors hover:bg-white/20"
+      >
+        ← Dashboard
+      </a>
+    </div>
+    <div class="flex w-full flex-1 items-start justify-center pt-4">
+      <ProfileForm client:load profile={profile} />
+    </div>
+  </div>
+</Layout>
