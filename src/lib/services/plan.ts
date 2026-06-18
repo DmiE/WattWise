@@ -38,6 +38,19 @@ export async function getActivePlan(supabase: SupabaseClient, userId: string): P
   return data ?? null;
 }
 
+/**
+ * Pure predicate: has `plan` expired relative to the calendar day `todayIso`?
+ *
+ * `todayIso` is a `YYYY-MM-DD` string; callers pass the server UTC date via
+ * `new Date().toISOString().slice(0, 10)`. A plan is expired once its last day
+ * (`end_date`) is strictly before today. Lexicographic string comparison is
+ * correct for zero-padded ISO dates. Used by both the middleware renewal gate
+ * and the renew route's eligibility guard.
+ */
+export function isPlanExpired(plan: Plan, todayIso: string): boolean {
+  return plan.end_date < todayIso;
+}
+
 /** A plan with its sessions ordered by day_index, or null when the plan is absent. */
 export async function getPlanWithSessions(supabase: SupabaseClient, planId: string): Promise<PlanWithSessions | null> {
   const { data: plan, error: planError } = await supabase.from("plans").select("*").eq("id", planId).maybeSingle();
@@ -96,6 +109,7 @@ export async function persistPlan(
   supabase: SupabaseClient,
   planInsert: PlanInsert,
   sessionInsertsFactory: (planId: string) => PlanSessionInsert[],
+  opts?: { supersede?: boolean },
 ): Promise<PersistPlanResult> {
   // Phase 1: insert the parent as 'pending' so it is invisible to both
   // getActivePlan (status='active' only) and the one_active_plan_per_user
@@ -120,10 +134,28 @@ export async function persistPlan(
     return { error: `session insert failed: ${sessionsError.message}` };
   }
 
-  // Phase 3: activate as the last step. The one_active_plan_per_user index is
-  // enforced here, so a caller that lost the race hits 23505 — drop our pending
-  // plan and return the winner's active plan (idempotent win), closing the
-  // TOCTOU window between the route's getActivePlan read and this write.
+  // Phase 3 (renewal / supersede mode): retire the caller's current active plan
+  // and activate this pending one in a single transaction via the RPC. Because
+  // the swap is atomic and ordered (old→superseded before new→active), it never
+  // trips one_active_plan_per_user, so the 23505 idempotent-win branch below is
+  // intentionally NOT used here. On RPC error, drop the pending row (mirroring
+  // the activation-failure cleanup) and surface the error.
+  if (opts?.supersede) {
+    const { data: superseded, error: supersedeError } = await supabase
+      .rpc("supersede_and_activate_plan", { p_new_plan_id: plan.id })
+      .single();
+    if (supersedeError) {
+      await supabase.from("plans").delete().eq("id", plan.id);
+      return { error: `plan supersede failed: ${supersedeError.message}` };
+    }
+    return { plan: superseded };
+  }
+
+  // Phase 3 (first-plan mode): activate as the last step. The
+  // one_active_plan_per_user index is enforced here, so a caller that lost the
+  // race hits 23505 — drop our pending plan and return the winner's active plan
+  // (idempotent win), closing the TOCTOU window between the route's
+  // getActivePlan read and this write.
   const { data: active, error: activateError } = await supabase
     .from("plans")
     .update({ status: "active" })

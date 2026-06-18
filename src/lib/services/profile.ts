@@ -1,5 +1,5 @@
 import type { createClient } from "@/lib/supabase";
-import type { Profile, ProfileInsert } from "@/types";
+import type { Profile, ProfileInsert, ProfileUpdate } from "@/types";
 import type { ProfileEditInput } from "@/lib/profile-edit-schema";
 
 // Thin profile data-access layer shared by the onboarding API route (writes)
@@ -44,5 +44,22 @@ export async function updateProfileFields(
   fields: ProfileEditInput,
 ): Promise<{ error: { message: string } | null }> {
   const { error } = await supabase.from("profiles").update(fields).eq("user_id", userId);
+  return { error: error ? { message: error.message } : null };
+}
+
+/**
+ * Persist the renewal field subset for the caller's own row under RLS. The
+ * column set differs from `updateProfileFields` (FR-010): it omits age/weight
+ * and may include the FTP trio (`ftp_watts` / `ftp_source` / `fitness_level`)
+ * for power-meter users. The `update` object is built server-side by
+ * `applyRenewal`, so the equipment/FTP trust boundary stays in app code and the
+ * cross-field CHECK constraints can't be violated.
+ */
+export async function updateProfileForRenewal(
+  supabase: SupabaseClient,
+  userId: string,
+  update: Partial<ProfileUpdate>,
+): Promise<{ error: { message: string } | null }> {
+  const { error } = await supabase.from("profiles").update(update).eq("user_id", userId);
   return { error: error ? { message: error.message } : null };
 }

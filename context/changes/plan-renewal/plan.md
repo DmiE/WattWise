@@ -336,27 +336,27 @@ One new migration (Phase 1 RPC). Apply with `npx supabase db push --linked`, the
 
 #### Automated
 
-- [x] 1.1 Migration applies cleanly: `npx supabase db push --linked`
-- [x] 1.2 Types regenerate without error: `npm run db:types`
-- [x] 1.3 Type checking passes: `npm run build`
-- [x] 1.4 Linting passes: `npm run lint`
+- [x] 1.1 Migration applies cleanly: `npx supabase db push --linked` — db19ed9
+- [x] 1.2 Types regenerate without error: `npm run db:types` — db19ed9
+- [x] 1.3 Type checking passes: `npm run build` — db19ed9
+- [x] 1.4 Linting passes: `npm run lint` — db19ed9
 
 #### Manual
 
-- [x] 1.5 RPC flips old→superseded and new→active atomically; bogus id raises and changes nothing
-- [x] 1.6 Exactly one active plan remains after a manual call
+- [x] 1.5 RPC flips old→superseded and new→active atomically; bogus id raises and changes nothing — db19ed9
+- [x] 1.6 Exactly one active plan remains after a manual call — db19ed9
 
 ### Phase 2: Renewal domain logic
 
 #### Automated
 
-- [ ] 2.1 Type checking passes: `npm run build`
-- [ ] 2.2 Linting passes: `npm run lint`
+- [x] 2.1 Type checking passes: `npm run build`
+- [x] 2.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 2.3 `applyRenewal` derives measured FTP for power-meter, no FTP fields for hrm/none
-- [ ] 2.4 `isPlanExpired` true for end_date before the day, false on/after
+- [x] 2.3 `applyRenewal` derives measured FTP for power-meter, no FTP fields for hrm/none
+- [x] 2.4 `isPlanExpired` true for end_date before the day, false on/after
 
 ### Phase 3: Renewal API route
 
