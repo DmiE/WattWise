@@ -234,6 +234,30 @@ export type Database = {
         };
         Returns: undefined;
       };
+      supersede_and_activate_plan: {
+        Args: { p_new_plan_id: string };
+        Returns: {
+          created_at: string;
+          end_date: string;
+          equipment_at_generation: Database["public"]["Enums"]["equipment_type"];
+          fitness_level_at_generation: Database["public"]["Enums"]["fitness_level"] | null;
+          ftp_at_generation: number | null;
+          generation_metadata: Json | null;
+          goal_at_generation: Database["public"]["Enums"]["training_goal"];
+          id: string;
+          max_hr_at_generation: number | null;
+          start_date: string;
+          status: Database["public"]["Enums"]["plan_status"];
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "plans";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
     };
     Enums: {
       equipment_type: "power_meter" | "hrm" | "none";
