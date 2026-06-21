@@ -350,28 +350,28 @@ One new migration (Phase 1 RPC). Apply with `npx supabase db push --linked`, the
 
 #### Automated
 
-- [x] 2.1 Type checking passes: `npm run build`
-- [x] 2.2 Linting passes: `npm run lint`
+- [x] 2.1 Type checking passes: `npm run build` — f5f5761
+- [x] 2.2 Linting passes: `npm run lint` — f5f5761
 
 #### Manual
 
-- [x] 2.3 `applyRenewal` derives measured FTP for power-meter, no FTP fields for hrm/none
-- [x] 2.4 `isPlanExpired` true for end_date before the day, false on/after
+- [x] 2.3 `applyRenewal` derives measured FTP for power-meter, no FTP fields for hrm/none — f5f5761
+- [x] 2.4 `isPlanExpired` true for end_date before the day, false on/after — f5f5761
 
 ### Phase 3: Renewal API route
 
 #### Automated
 
-- [ ] 3.1 Type checking passes: `npm run build`
-- [ ] 3.2 Linting passes: `npm run lint`
+- [x] 3.1 Type checking passes: `npm run build`
+- [x] 3.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 3.3 POST with expired plan → new plan; old plan superseded; one active plan with sessions
-- [ ] 3.4 POST with non-expired plan → 409
-- [ ] 3.5 Power-meter without ftp_watts → 400; with it → ftp_source='measured'
-- [ ] 3.6 Generation failure leaves old plan active and profile unchanged
-- [ ] 3.7 Persist failure after profile update leaves old plan active; retry succeeds
+- [x] 3.3 POST with expired plan → new plan; old plan superseded; one active plan with sessions
+- [x] 3.4 POST with non-expired plan → 409
+- [x] 3.5 Power-meter without ftp_watts → 400; with it → ftp_source='measured'
+- [x] 3.6 Generation failure leaves old plan active and profile unchanged
+- [x] 3.7 Persist failure after profile update leaves old plan active; retry succeeds
 
 ### Phase 4: Renewal page + form island
 

@@ -5,27 +5,9 @@ import { getActivePlan, persistPlan } from "@/lib/services/plan";
 import { generateStructured, OpenRouterError } from "@/lib/services/openrouter";
 import { PLAN_JSON_SCHEMA } from "@/lib/plan-schema";
 import { buildPlanMessages, nextMonday, toPlanInsert, toSessionInserts, validateGeneratedPlan } from "@/lib/plan";
+import { json, MAX_GENERATION_ATTEMPTS, GENERATION_BUDGET_MS } from "@/lib/services/generation";
 
 export const prerender = false;
-
-const json = (body: unknown, status: number) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
-
-// Route-level generation attempts. The OpenRouter client already retries
-// transport faults (network / 5xx / 429); this loop additionally retries when a
-// transport-OK response fails the SEMANTIC trust boundary (zod + equipment /
-// availability / duration). Total LLM calls = MAX_GENERATION_ATTEMPTS.
-const MAX_GENERATION_ATTEMPTS = 2;
-
-// Overall upstream-wait budget shared across all generation attempts. Without
-// it the two retry layers (route attempts × the client's transport retries)
-// multiply into minutes on a degraded upstream. The deadline is passed into
-// generateStructured, which caps each transport attempt to the time remaining
-// and stops retrying once it passes (see plan.md F2).
-const GENERATION_BUDGET_MS = 90_000;
 
 /**
  * POST /api/plans/generate — idempotent first-plan generation.

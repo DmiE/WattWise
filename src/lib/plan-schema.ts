@@ -93,13 +93,21 @@ export type SessionStructure = GeneratedSession["structure"];
 // `const`. This object must describe the SAME shape as `planSchema` above; zod
 // re-validates whatever comes back, so a drift surfaces as a validation failure
 // (retryable), never a silent persist.
+//
+// NOTE: integer fields carry NO `minimum`/`maximum` keywords. The Anthropic
+// provider rejects strict structured-output schemas that put min/max on
+// `integer` types ("For 'integer' type, properties maximum, minimum are not
+// supported"), which 400s the whole request. Numeric ranges are stated in each
+// `description` as a soft hint instead; the hard bounds remain enforced by the
+// zod `planSchema` above (the real trust boundary), so dropping them here is
+// safe — an out-of-range value just fails zod validation and retries.
 
 const WATTS_TARGET_JSON_SCHEMA = {
   type: "object",
   properties: {
     kind: { type: "string", const: "watts" },
-    low_watts: { type: "integer", minimum: 0, maximum: 2000, description: "Lower bound of the watt range" },
-    high_watts: { type: "integer", minimum: 0, maximum: 2000, description: "Upper bound of the watt range" },
+    low_watts: { type: "integer", description: "Lower bound of the watt range (0-2000)" },
+    high_watts: { type: "integer", description: "Upper bound of the watt range (0-2000)" },
   },
   required: ["kind", "low_watts", "high_watts"],
   additionalProperties: false,
@@ -109,9 +117,9 @@ const HR_ZONE_TARGET_JSON_SCHEMA = {
   type: "object",
   properties: {
     kind: { type: "string", const: "hr_zone" },
-    zone: { type: "integer", minimum: 1, maximum: 5, description: "Heart-rate zone 1-5" },
-    low_bpm: { type: "integer", minimum: 30, maximum: 230, description: "Lower bound of the heart-rate range in bpm" },
-    high_bpm: { type: "integer", minimum: 30, maximum: 230, description: "Upper bound of the heart-rate range in bpm" },
+    zone: { type: "integer", description: "Heart-rate zone 1-5" },
+    low_bpm: { type: "integer", description: "Lower bound of the heart-rate range in bpm (30-230)" },
+    high_bpm: { type: "integer", description: "Upper bound of the heart-rate range in bpm (30-230)" },
   },
   required: ["kind", "zone", "low_bpm", "high_bpm"],
   additionalProperties: false,
@@ -121,7 +129,7 @@ const RPE_TARGET_JSON_SCHEMA = {
   type: "object",
   properties: {
     kind: { type: "string", const: "rpe" },
-    rpe: { type: "integer", minimum: 1, maximum: 10, description: "Rate of perceived exertion, 1-10" },
+    rpe: { type: "integer", description: "Rate of perceived exertion, 1-10" },
     description: { type: "string", description: "Short cue for the perceived effort" },
   },
   required: ["kind", "rpe", "description"],
@@ -139,16 +147,12 @@ export const PLAN_JSON_SCHEMA = {
         properties: {
           day_index: {
             type: "integer",
-            minimum: 1,
-            maximum: 28,
             description:
               "1-28. day_index 1 is the plan's first Monday; 2 = Tuesday, … 7 = Sunday, then the pattern repeats each week.",
           },
           session_type: { type: "string", enum: [...SESSION_TYPES] },
           planned_duration_min: {
             type: "integer",
-            minimum: 15,
-            maximum: 360,
             description: "Total session duration in minutes (15-360); must equal the sum of segment durations.",
           },
           title: { type: "string", description: "Short session title" },
@@ -164,9 +168,7 @@ export const PLAN_JSON_SCHEMA = {
                     label: { type: "string", description: "Segment label, e.g. Warm-up, Interval, Recovery" },
                     duration_min: {
                       type: "integer",
-                      minimum: 1,
-                      maximum: 360,
-                      description: "Segment duration in minutes",
+                      description: "Segment duration in minutes (1-360)",
                     },
                     target: {
                       anyOf: [WATTS_TARGET_JSON_SCHEMA, HR_ZONE_TARGET_JSON_SCHEMA, RPE_TARGET_JSON_SCHEMA],
