@@ -1,11 +1,13 @@
-import { useCallback, useState } from "react";
-import { Activity, Ban, Bike, Check, Loader2, RefreshCw, Zap } from "lucide-react";
+import { useCallback, useId, useState } from "react";
+import { Activity, Ban, Bike, Check, ChevronDown, Loader2, RefreshCw, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { INTENSITY_REFERENCE } from "@/lib/intensity-reference";
 import { usePlanGeneration } from "@/components/hooks/usePlanGeneration";
 import { useSessionStatus } from "@/components/hooks/useSessionStatus";
 import type {
+  EquipmentType,
   PlanSegment,
   PlanSessionWithLog,
   PlanWithSessions,
@@ -198,6 +200,7 @@ function PlanOverview({ plan }: { plan: PlanWithSessions }) {
                 <SessionDetail
                   key={expandedSession.id}
                   session={expandedSession}
+                  equipment={plan.plan.equipment_at_generation}
                   onSetStatus={setStatus}
                   pending={pending}
                   error={error}
@@ -276,11 +279,13 @@ function DayCell({
 
 function SessionDetail({
   session,
+  equipment,
   onSetStatus,
   pending,
   error,
 }: {
   session: PlanSessionWithLog;
+  equipment: EquipmentType;
   onSetStatus: (sessionId: string, input: SessionStatusUpdate) => void;
   pending: boolean;
   error: string | null;
@@ -342,6 +347,8 @@ function SessionDetail({
           </li>
         ))}
       </ol>
+
+      <IntensityReference equipment={equipment} />
 
       <div className="mt-4 flex items-center gap-2 border-t border-white/10 pt-4 text-xs">
         <span className="text-blue-100/50">Status</span>
@@ -541,6 +548,71 @@ function StatusBadge({ status }: { status: SessionStatus }) {
     );
   }
   return <span className="font-medium text-blue-100/80">Planned</span>;
+}
+
+/**
+ * Collapsed-by-default "What do these mean?" reference for the cyclist's
+ * intensity targets. Picks the equipment-correct table/scale from the static
+ * content module. Mirrors `SessionDetail`'s inline-mode pattern (local
+ * `useState`) rather than introducing a disclosure library. Purely
+ * presentational — its open state resets with the `SessionDetail` remount when
+ * a different day is expanded.
+ */
+function IntensityReference({ equipment }: { equipment: EquipmentType }) {
+  const [open, setOpen] = useState(false);
+  const regionId = useId();
+  const content = INTENSITY_REFERENCE[equipment];
+
+  return (
+    <div className="mt-4">
+      <button
+        type="button"
+        onClick={() => {
+          setOpen((v) => !v);
+        }}
+        aria-expanded={open}
+        aria-controls={regionId}
+        className="flex items-center gap-1.5 text-xs font-medium text-blue-200 transition-colors hover:text-blue-100"
+      >
+        <ChevronDown className={cn("size-3.5 transition-transform", open && "rotate-180")} aria-hidden />
+        What do these mean?
+      </button>
+
+      {open && (
+        <div id={regionId} className="mt-3 rounded-lg border border-white/10 bg-white/5 p-3">
+          <p className="text-xs font-semibold tracking-wide text-blue-100/60 uppercase">{content.caption}</p>
+          {content.kind === "zones" ? (
+            <ul className="mt-2 space-y-2">
+              {content.rows.map((row) => (
+                <li key={row.zone} className="flex items-baseline justify-between gap-3 text-sm">
+                  <span className="flex items-baseline gap-2">
+                    <span className="w-6 shrink-0 font-medium text-blue-100 tabular-nums">{row.zone}</span>
+                    <span className="text-white">{row.name}</span>
+                    <span className="text-xs text-blue-100/50">{row.feel}</span>
+                  </span>
+                  <span className="shrink-0 font-medium text-blue-100 tabular-nums">{row.range}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <ul className="mt-2 space-y-2">
+              {content.bands.map((band) => (
+                <li key={band.range} className="flex items-baseline justify-between gap-3 text-sm">
+                  <span className="flex items-baseline gap-2">
+                    <span className="w-10 shrink-0 font-medium whitespace-nowrap text-blue-100 tabular-nums">
+                      {band.range}
+                    </span>
+                    <span className="text-white">{band.name}</span>
+                    <span className="text-xs text-blue-100/50">{band.feel}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 /** Format a segment's intensity target in its equipment-correct unit. */
