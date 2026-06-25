@@ -86,6 +86,40 @@ export async function getPlanWithSessions(supabase: SupabaseClient, planId: stri
   return { plan, sessions: withLogs };
 }
 
+/**
+ * Every `done` session belonging to the caller, across ALL their plans
+ * (current and past), newest first — with each session's log embedded.
+ *
+ * No `user_id`/`plan_id` filter is needed or wanted: RLS on `plan_sessions`
+ * walks up via EXISTS to `plans.user_id = auth.uid()`, so omitting any plan
+ * filter returns exactly the caller's own sessions across every plan they own.
+ *
+ * Ordered by `scheduled_date` desc, then `day_index` desc as a deterministic
+ * tiebreaker — two plans (e.g. after a renewal) can share a `scheduled_date`,
+ * and without the secondary key same-date rows reshuffle between loads.
+ *
+ * The `session_logs` embed is a to-one (FK is also the PK), so PostgREST
+ * returns it as a single object or null — normalize directly, never `[0]`.
+ * A `done` session always has a log (the `set_session_status` RPC upserts one),
+ * so `log` is non-null in practice for these rows.
+ */
+export async function getCompletedSessions(supabase: SupabaseClient): Promise<PlanSessionWithLog[]> {
+  const { data: sessions, error } = await supabase
+    .from("plan_sessions")
+    .select("*, session_logs(*)")
+    .eq("status", "done")
+    .order("scheduled_date", { ascending: false })
+    .order("day_index", { ascending: false });
+  if (error) {
+    throw new Error(`getCompletedSessions failed: ${error.message}`);
+  }
+
+  return sessions.map(({ session_logs, ...session }) => ({
+    ...(session as PlanSessionView),
+    log: session_logs,
+  }));
+}
+
 export type PersistPlanResult = { plan: Plan } | { error: string };
 
 /**
