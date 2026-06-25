@@ -3,7 +3,7 @@ project: WattWise
 version: 1
 status: draft
 created: 2026-05-31
-updated: 2026-06-17
+updated: 2026-06-25
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -35,7 +35,7 @@ Amateur road cyclists who already know their FTP have no tool that converts thei
 | S-04 | profile-editing         | edit goal, availability, age, and weight after onboarding                            | S-01          | FR-010                      | done |
 | S-03 | session-tracking        | mark any session done (with log) or skipped                                          | S-02          | FR-007, FR-008              | done |
 | S-07 | intensity-reference     | see zone definitions or RPE scale within a session view                              | S-02          | FR-011                      | proposed |
-| S-05 | plan-renewal            | see a renewal check-in when the plan expires and receive a new AI plan               | S-02, S-03    | FR-012, FR-013, US-02       | proposed |
+| S-05 | plan-renewal            | see a renewal check-in when the plan expires and receive a new AI plan               | S-02, S-03    | FR-012, FR-013, US-02       | done |
 | S-06 | session-history         | view a scrollable list of completed sessions                                         | S-03          | FR-009                      | proposed |
 
 ## Streams
@@ -151,7 +151,7 @@ Foundations below assume these layers are present and do NOT re-scaffold them.
 - **Unknowns:**
   - How is plan expiry detected — by calendar date (plan start + 28 days) or by session completion count? Date-based is implied by the PRD but not specified. — Owner: product. Block: no (decidable during planning; date-based is the safe default).
 - **Risk:** Renewal reuses the AI generation service from S-02; the key correctness risk is that the FTP update field is shown exclusively to power-meter users (PRD US-02 AC). Sequenced after S-03 so the plan-period model — sessions marked done or skipped across 4 weeks — is already in place when the renewal logic needs to detect expiry.
-- **Status:** proposed
+- **Status:** done
 
 ---
 
@@ -218,3 +218,4 @@ Foundations below assume these layers are present and do NOT re-scaffold them.
 - **S-02: User can confirm their onboarding inputs and immediately receive an AI-generated 4-week training plan. Every session shows type, duration, and intensity targets adapted to declared equipment: watts for power-meter users, heart-rate zones for HRM users, RPE descriptions for users with no equipment. The plan is presented as a week-overview with session detail accessible per session.** — Archived 2026-06-13 → `context/archive/2026-06-10-first-plan-generation/`. Lesson: —.
 - **S-03: User can mark any session as done — logging actual duration, subjective rating, and km ridden — or as skipped. Status is persisted and reflected in the plan view.** — Archived 2026-06-15 → `context/archive/2026-06-15-session-tracking/`. Lesson: —.
 - **S-04: User can edit their profile — training goal, weekly availability, age, and weight — after completing onboarding. Changes are saved immediately. The active plan is not regenerated (FTP editing and plan regeneration are explicitly v2 scope per PRD).** — Archived 2026-06-17 → `context/archive/2026-06-17-profile-editing/`. Lesson: —.
+- **S-05: When the 4-week plan expires, user sees a renewal check-in as the first screen on next visit. They can confirm or update their training goal, weekly availability, and — for power-meter users only — current FTP. Confirming immediately generates a new AI-generated 4-week plan reflecting any updated inputs.** — Archived 2026-06-25 → `context/archive/2026-06-18-plan-renewal/`. Lesson: —.
