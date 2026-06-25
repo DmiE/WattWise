@@ -328,6 +328,12 @@ One new migration (Phase 1 RPC). Apply with `npx supabase db push --linked`, the
 - Middleware gate precedent: `src/middleware.ts:24-40`
 - Form island precedent: `src/components/profile/ProfileForm.tsx`, `src/components/hooks/usePlanGeneration.ts`
 
+## Addenda
+
+> Discovered-scope changes made during implementation that fall outside the original "Changes Required" list. Recorded so the plan stays the source of truth.
+
+- **Shared generation JSON schema fix (Phase 3, `d224f4d`)** — `src/lib/plan-schema.ts` was edited to strip `minimum`/`maximum` keywords from every `integer` field in `PLAN_JSON_SCHEMA`. The Anthropic provider rejects strict structured-output schemas that put `min`/`max` on `integer` types (400s the whole request), so renewal's generation loop (which reuses the shared pipeline) would fail on every attempt. Numeric ranges are now stated as soft hints in each field `description`; the hard bounds remain enforced by the zod `planSchema` (the real trust boundary), so an out-of-range value still fails validation and retries. This touches the shared schema used by the first-plan `generate.ts` path too — its idempotent *contract* is unchanged, but the JSON schema it sends is now looser-by-necessity. Not anticipated by the "Not changing the first-plan path" guardrail.
+
 ## Progress
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
