@@ -2,7 +2,7 @@
 change_id: intensity-reference
 roadmap_id: S-07
 title: Intensity reference in session view
-status: implemented
+status: impl_reviewed
 created: 2026-06-25
 updated: 2026-06-25
 prd_refs: [FR-011]

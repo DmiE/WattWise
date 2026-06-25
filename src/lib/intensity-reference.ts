@@ -39,8 +39,6 @@ export interface RpeBand {
 interface ZoneReference {
   kind: "zones";
   caption: string;
-  /** Column header for the range column ("% FTP" / "% max HR"). */
-  rangeHeader: string;
   rows: ZoneRow[];
 }
 
@@ -56,7 +54,6 @@ export const INTENSITY_REFERENCE: Record<EquipmentType, IntensityReferenceConten
   power_meter: {
     kind: "zones",
     caption: "Power zones (% of FTP)",
-    rangeHeader: "% FTP",
     rows: [
       { zone: "Z1", name: "Active recovery", range: "< 56%", feel: "Very easy, conversational" },
       { zone: "Z2", name: "Endurance", range: "56–75%", feel: "Comfortable, all-day pace" },
@@ -68,7 +65,6 @@ export const INTENSITY_REFERENCE: Record<EquipmentType, IntensityReferenceConten
   hrm: {
     kind: "zones",
     caption: "Heart-rate zones (% of max HR)",
-    rangeHeader: "% max HR",
     rows: [
       { zone: "Z1", name: "Active recovery", range: "50–60%", feel: "Very easy, conversational" },
       { zone: "Z2", name: "Endurance", range: "60–70%", feel: "Comfortable, all-day pace" },
