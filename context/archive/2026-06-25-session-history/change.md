@@ -2,9 +2,10 @@
 change_id: session-history
 roadmap_id: S-06
 title: Session history list
-status: impl_reviewed
+status: archived
 created: 2026-06-25
 updated: 2026-06-25
+archived_at: 2026-06-25T21:45:32Z
 prd_refs: [FR-009]
 ---
 
