@@ -222,33 +222,33 @@ None — no schema or data changes.
 
 #### Manual
 
-- [x] 1.3 `getCompletedSessions` behavior (newest-first, non-null log, `[]` when none) — deferred to Phase 2 render (2.3/2.4)
+- [x] 1.3 `getCompletedSessions` behavior (newest-first, non-null log, `[]` when none) — deferred to Phase 2 render (2.3/2.4) — bc6b834
 
 ### Phase 2: History page & component
 
 #### Automated
 
-- [x] 2.1 Lint passes: `npm run lint`
-- [x] 2.2 Production build passes: `npm run build`
+- [x] 2.1 Lint passes: `npm run lint` — bc6b834
+- [x] 2.2 Production build passes: `npm run build` — bc6b834
 
 #### Manual
 
-- [x] 2.3 `/history` renders reverse-chronological list with correct fields across two plans
-- [x] 2.4 Empty state shown for a user with no completed sessions
-- [x] 2.5 List scrolls past viewport and is usable on mobile width
-- [x] 2.6 "← Dashboard" link returns to dashboard
+- [x] 2.3 `/history` renders reverse-chronological list with correct fields across two plans — bc6b834
+- [x] 2.4 Empty state shown for a user with no completed sessions — bc6b834
+- [x] 2.5 List scrolls past viewport and is usable on mobile width — bc6b834
+- [x] 2.6 "← Dashboard" link returns to dashboard — bc6b834
 
 ### Phase 3: Routing & navigation
 
 #### Automated
 
-- [ ] 3.1 Lint passes: `npm run lint`
-- [ ] 3.2 Production build passes: `npm run build`
+- [x] 3.1 Lint passes: `npm run lint`
+- [x] 3.2 Production build passes: `npm run build`
 
 #### Manual
 
-- [ ] 3.3 Unauthenticated `/history` redirects to `/auth/signin`
-- [ ] 3.4 Expired-plan user reaches `/history`; other routes still redirect to `/renewal`
-- [ ] 3.5 No-profile user hitting `/history` is sent to `/onboarding`
-- [ ] 3.6 "History" link appears on dashboard and navigates to the list
-- [ ] 3.7 "View history" link appears on `/renewal` and navigates to `/history` for an expired-plan user
+- [x] 3.3 Unauthenticated `/history` redirects to `/auth/signin`
+- [x] 3.4 Expired-plan user reaches `/history`; other routes still redirect to `/renewal`
+- [x] 3.5 No-profile user hitting `/history` is sent to `/onboarding`
+- [x] 3.6 "History" link appears on dashboard and navigates to the list
+- [x] 3.7 "View history" link appears on `/renewal` and navigates to `/history` for an expired-plan user

@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase";
 import { getProfile } from "@/lib/services/profile";
 import { getActivePlan, isPlanExpired } from "@/lib/services/plan";
 
-const PROTECTED_ROUTES = ["/dashboard", "/onboarding", "/profile", "/renewal"];
+const PROTECTED_ROUTES = ["/dashboard", "/onboarding", "/profile", "/renewal", "/history"];
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const supabase = createClient(context.request.headers, context.cookies);
@@ -27,6 +27,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
     // Guards against redirect loops by checking whether we're already there.
     const onOnboarding = context.url.pathname.startsWith("/onboarding");
     const onRenewal = context.url.pathname.startsWith("/renewal");
+    // /history is exempt from the renewal redirect: an expired-plan user must
+    // still be able to review past work without renewing first.
+    const onHistory = context.url.pathname.startsWith("/history");
     const todayIso = new Date().toISOString().slice(0, 10);
 
     try {
@@ -45,7 +48,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
       if (supabase && profile && !onOnboarding) {
         const active = await getActivePlan(supabase, context.locals.user.id);
         const expired = !!active && isPlanExpired(active, todayIso);
-        if (expired && !onRenewal) {
+        if (expired && !onRenewal && !onHistory) {
           return context.redirect("/renewal");
         }
         if (!expired && onRenewal) {

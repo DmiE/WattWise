@@ -50,8 +50,14 @@ if (!profile) {
 
 <Layout title="Renew your plan">
   <div class="bg-cosmic flex min-h-screen flex-col items-center p-4">
-    <div class="flex w-full flex-1 items-start justify-center pt-8">
+    <div class="flex w-full flex-1 flex-col items-center justify-start pt-8">
       <RenewalForm client:load profile={profile} />
+      <a
+        href="/history"
+        class="mt-6 rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm text-white transition-colors hover:bg-white/20"
+      >
+        View history
+      </a>
     </div>
   </div>
 </Layout>
