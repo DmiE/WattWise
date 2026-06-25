@@ -1,0 +1,46 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import SessionHistory from "@/components/history/SessionHistory.astro";
+import { createClient } from "@/lib/supabase";
+import { getCompletedSessions } from "@/lib/services/plan";
+import type { PlanSessionWithLog } from "@/types";
+
+const { user } = Astro.locals;
+
+// Fetch every completed session across the user's plans server-side. RLS scopes
+// the rows to the caller, so no user_id filter is needed. Fail open to an empty
+// list on a transient read error so the page never 500s (mirrors dashboard.astro).
+let sessions: PlanSessionWithLog[] = [];
+if (user) {
+  const supabase = createClient(Astro.request.headers, Astro.cookies);
+  if (supabase) {
+    try {
+      sessions = await getCompletedSessions(supabase);
+    } catch {
+      sessions = [];
+    }
+  }
+}
+---
+
+<Layout title="History">
+  <div class="bg-cosmic flex min-h-screen flex-col items-center p-4">
+    <div class="flex w-full max-w-2xl items-center justify-between py-4 text-white">
+      <a
+        href="/dashboard"
+        class="rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm text-white transition-colors hover:bg-white/20"
+      >
+        ← Dashboard
+      </a>
+    </div>
+    <div class="w-full max-w-2xl pt-4">
+      <header class="mb-5 text-white">
+        <h1 class="bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-2xl font-bold text-transparent">
+          Session history
+        </h1>
+        <p class="mt-1 text-sm text-blue-100/70">Every completed session across your plans, newest first.</p>
+      </header>
+      <SessionHistory sessions={sessions} />
+    </div>
+  </div>
+</Layout>

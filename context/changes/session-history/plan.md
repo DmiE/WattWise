@@ -217,26 +217,26 @@ None — no schema or data changes.
 
 #### Automated
 
-- [x] 1.1 Type checking / lint passes: `npm run lint`
-- [x] 1.2 Production build passes: `npm run build`
+- [x] 1.1 Type checking / lint passes: `npm run lint` — 59c4917
+- [x] 1.2 Production build passes: `npm run build` — 59c4917
 
 #### Manual
 
-- [ ] 1.3 `getCompletedSessions` behavior (newest-first, non-null log, `[]` when none) — deferred to Phase 2 render (2.3/2.4)
+- [x] 1.3 `getCompletedSessions` behavior (newest-first, non-null log, `[]` when none) — deferred to Phase 2 render (2.3/2.4)
 
 ### Phase 2: History page & component
 
 #### Automated
 
-- [ ] 2.1 Lint passes: `npm run lint`
-- [ ] 2.2 Production build passes: `npm run build`
+- [x] 2.1 Lint passes: `npm run lint`
+- [x] 2.2 Production build passes: `npm run build`
 
 #### Manual
 
-- [ ] 2.3 `/history` renders reverse-chronological list with correct fields across two plans
-- [ ] 2.4 Empty state shown for a user with no completed sessions
-- [ ] 2.5 List scrolls past viewport and is usable on mobile width
-- [ ] 2.6 "← Dashboard" link returns to dashboard
+- [x] 2.3 `/history` renders reverse-chronological list with correct fields across two plans
+- [x] 2.4 Empty state shown for a user with no completed sessions
+- [x] 2.5 List scrolls past viewport and is usable on mobile width
+- [x] 2.6 "← Dashboard" link returns to dashboard
 
 ### Phase 3: Routing & navigation
 

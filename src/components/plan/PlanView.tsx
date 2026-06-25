@@ -3,6 +3,7 @@ import { Activity, Ban, Bike, Check, ChevronDown, Loader2, RefreshCw, Zap } from
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { formatSessionDate } from "@/lib/format";
 import { INTENSITY_REFERENCE } from "@/lib/intensity-reference";
 import { usePlanGeneration } from "@/components/hooks/usePlanGeneration";
 import { useSessionStatus } from "@/components/hooks/useSessionStatus";
@@ -102,16 +103,6 @@ function weekdayLabel(dayIndex: number): string {
   return WEEKDAY_LABELS[(dayIndex - 1) % 7];
 }
 
-/** Format an ISO `YYYY-MM-DD` date as e.g. "Jun 15", using UTC to avoid TZ drift. */
-function formatDate(iso: string): string {
-  const [year, month, day] = iso.split("-").map(Number);
-  return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  });
-}
-
 function PlanOverview({ plan }: { plan: PlanWithSessions }) {
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
   // Lift sessions into state (seeded from the server-rendered source of truth)
@@ -165,7 +156,8 @@ function PlanOverview({ plan }: { plan: PlanWithSessions }) {
           Your 4-week plan
         </h1>
         <p className="mt-1 text-sm text-blue-100/70">
-          {formatDate(plan.plan.start_date)} – {formatDate(plan.plan.end_date)} · {sessions.length} sessions
+          {formatSessionDate(plan.plan.start_date)} – {formatSessionDate(plan.plan.end_date)} · {sessions.length}{" "}
+          sessions
         </p>
       </header>
 
@@ -323,7 +315,7 @@ function SessionDetail({
             <h3 className="font-semibold text-white">{session.title}</h3>
           </div>
           <p className="mt-0.5 text-xs text-blue-100/50">
-            {weekdayLabel(session.day_index)} · {formatDate(session.scheduled_date)} · {style.label}
+            {weekdayLabel(session.day_index)} · {formatSessionDate(session.scheduled_date)} · {style.label}
           </p>
         </div>
         <span className="shrink-0 rounded-md bg-white/10 px-2 py-1 text-xs font-medium text-blue-100">

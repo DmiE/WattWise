@@ -1,0 +1,57 @@
+---
+import { formatSessionDate } from "@/lib/format";
+import type { PlanSessionWithLog, SessionType } from "@/types";
+
+interface Props {
+  sessions: PlanSessionWithLog[];
+}
+
+const { sessions } = Astro.props;
+
+// Session-type presentation, mirroring `SESSION_STYLES` in PlanView.tsx so the
+// history rows read consistently with the plan grid.
+const SESSION_STYLES: Record<SessionType, { dot: string; label: string }> = {
+  endurance: { dot: "bg-blue-400", label: "Endurance" },
+  intervals: { dot: "bg-amber-400", label: "Intervals" },
+  recovery: { dot: "bg-emerald-400", label: "Recovery" },
+};
+---
+
+{
+  sessions.length === 0 ? (
+    <div class="rounded-2xl border border-white/10 bg-white/10 p-8 text-center text-white backdrop-blur-xl">
+      <h2 class="text-lg font-semibold text-white">No completed sessions yet</h2>
+      <p class="mt-2 text-sm text-blue-100/70">Mark a session done on your plan to start your training log.</p>
+    </div>
+  ) : (
+    <div class="max-h-[70vh] overflow-y-auto rounded-2xl border border-white/10 bg-white/10 p-2 text-white backdrop-blur-xl sm:p-3">
+      <ul class="space-y-2">
+        {sessions.map((session) => {
+          const { log } = session;
+          // A `done` session always has a log (the set_session_status RPC upserts
+          // one), but guard defensively so a missing log never breaks the list.
+          if (!log) return null;
+          const style = SESSION_STYLES[session.session_type];
+          return (
+            <li class="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-3 sm:px-4">
+              <div class="min-w-0">
+                <p class="flex items-center gap-2 text-sm font-medium text-white">
+                  <span class:list={["size-2", "shrink-0", "rounded-full", style.dot]} />
+                  <span class="truncate">{session.title}</span>
+                </p>
+                <p class="mt-0.5 text-xs text-blue-100/60">
+                  {formatSessionDate(session.scheduled_date, { weekday: true })} · {style.label}
+                </p>
+              </div>
+              <div class="flex shrink-0 items-center gap-3 text-xs text-blue-100/80 tabular-nums sm:gap-4 sm:text-sm">
+                <span class="font-medium text-white">{log.actual_duration_min} min</span>
+                <span>{log.rating}/5</span>
+                <span>{log.km_ridden} km</span>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  )
+}
