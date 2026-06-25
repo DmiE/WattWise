@@ -34,7 +34,7 @@ Amateur road cyclists who already know their FTP have no tool that converts thei
 | S-02 | first-plan-generation   | confirm inputs and receive a 4-week AI plan with equipment-adapted intensity targets | S-01          | FR-004, FR-005, FR-006, US-01 | done     |
 | S-04 | profile-editing         | edit goal, availability, age, and weight after onboarding                            | S-01          | FR-010                      | done |
 | S-03 | session-tracking        | mark any session done (with log) or skipped                                          | S-02          | FR-007, FR-008              | done |
-| S-07 | intensity-reference     | see zone definitions or RPE scale within a session view                              | S-02          | FR-011                      | proposed |
+| S-07 | intensity-reference     | see zone definitions or RPE scale within a session view                              | S-02          | FR-011                      | done     |
 | S-05 | plan-renewal            | see a renewal check-in when the plan expires and receive a new AI plan               | S-02, S-03    | FR-012, FR-013, US-02       | done |
 | S-06 | session-history         | view a scrollable list of completed sessions                                         | S-03          | FR-009                      | proposed |
 
@@ -179,7 +179,7 @@ Foundations below assume these layers are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Static reference content; no technical risk. Nice-to-have added in response to the FR-005 challenge (users new to structured training may not know what Zone 3 means). **Park first if the 6-week budget is under pressure.**
-- **Status:** proposed
+- **Status:** done
 
 ## Backlog Handoff
 
@@ -219,3 +219,4 @@ Foundations below assume these layers are present and do NOT re-scaffold them.
 - **S-03: User can mark any session as done — logging actual duration, subjective rating, and km ridden — or as skipped. Status is persisted and reflected in the plan view.** — Archived 2026-06-15 → `context/archive/2026-06-15-session-tracking/`. Lesson: —.
 - **S-04: User can edit their profile — training goal, weekly availability, age, and weight — after completing onboarding. Changes are saved immediately. The active plan is not regenerated (FTP editing and plan regeneration are explicitly v2 scope per PRD).** — Archived 2026-06-17 → `context/archive/2026-06-17-profile-editing/`. Lesson: —.
 - **S-05: When the 4-week plan expires, user sees a renewal check-in as the first screen on next visit. They can confirm or update their training goal, weekly availability, and — for power-meter users only — current FTP. Confirming immediately generates a new AI-generated 4-week plan reflecting any updated inputs.** — Archived 2026-06-25 → `context/archive/2026-06-18-plan-renewal/`. Lesson: —.
+- **S-07: User can tap or expand an inline reference within the session view to see zone definitions (for power-meter and HRM users) or the RPE scale (for no-equipment users).** — Archived 2026-06-25 → `context/archive/2026-06-25-intensity-reference/`. Lesson: —.
