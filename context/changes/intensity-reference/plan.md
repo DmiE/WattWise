@@ -187,15 +187,15 @@ None. No schema, data, or API changes.
 
 #### Automated
 
-- [x] 1.1 Type checking passes (`npm run build`)
-- [x] 1.2 Linting passes (`npm run lint`)
-- [x] 1.3 Formatting clean (`npm run format`)
+- [x] 1.1 Type checking passes (`npm run build`) — 72b3628
+- [x] 1.2 Linting passes (`npm run lint`) — 72b3628
+- [x] 1.3 Formatting clean (`npm run format`) — 72b3628
 
 #### Manual
 
-- [x] 1.4 Power-meter plan shows the 5-row % FTP power table
-- [x] 1.5 HRM plan shows the 5-row % max-HR table with labels matching segment `Z#`
-- [x] 1.6 No-equipment plan shows the RPE 1–10 bands
-- [x] 1.7 Toggle opens/closes; existing done/skip/log flows unaffected
-- [x] 1.8 Reference is keyboard- and screen-reader-accessible (`aria-expanded`)
-- [x] 1.9 Reference resets to collapsed when switching expanded days
+- [x] 1.4 Power-meter plan shows the 5-row % FTP power table — 72b3628
+- [x] 1.5 HRM plan shows the 5-row % max-HR table with labels matching segment `Z#` — 72b3628
+- [x] 1.6 No-equipment plan shows the RPE 1–10 bands — 72b3628
+- [x] 1.7 Toggle opens/closes; existing done/skip/log flows unaffected — 72b3628
+- [x] 1.8 Reference is keyboard- and screen-reader-accessible (`aria-expanded`) — 72b3628
+- [x] 1.9 Reference resets to collapsed when switching expanded days — 72b3628
