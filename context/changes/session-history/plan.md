@@ -242,13 +242,13 @@ None — no schema or data changes.
 
 #### Automated
 
-- [x] 3.1 Lint passes: `npm run lint`
-- [x] 3.2 Production build passes: `npm run build`
+- [x] 3.1 Lint passes: `npm run lint` — a03d124
+- [x] 3.2 Production build passes: `npm run build` — a03d124
 
 #### Manual
 
-- [x] 3.3 Unauthenticated `/history` redirects to `/auth/signin`
-- [x] 3.4 Expired-plan user reaches `/history`; other routes still redirect to `/renewal`
-- [x] 3.5 No-profile user hitting `/history` is sent to `/onboarding`
-- [x] 3.6 "History" link appears on dashboard and navigates to the list
-- [x] 3.7 "View history" link appears on `/renewal` and navigates to `/history` for an expired-plan user
+- [x] 3.3 Unauthenticated `/history` redirects to `/auth/signin` — a03d124
+- [x] 3.4 Expired-plan user reaches `/history`; other routes still redirect to `/renewal` — a03d124
+- [x] 3.5 No-profile user hitting `/history` is sent to `/onboarding` — a03d124
+- [x] 3.6 "History" link appears on dashboard and navigates to the list — a03d124
+- [x] 3.7 "View history" link appears on `/renewal` and navigates to `/history` for an expired-plan user — a03d124
