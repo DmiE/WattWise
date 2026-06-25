@@ -392,13 +392,13 @@ One new migration (Phase 1 RPC). Apply with `npx supabase db push --linked`, the
 
 #### Automated
 
-- [x] 5.1 Type checking passes: `npm run build`
-- [x] 5.2 Linting passes: `npm run lint`
+- [x] 5.1 Type checking passes: `npm run build` — 930b91d
+- [x] 5.2 Linting passes: `npm run lint` — 930b91d
 
 #### Manual
 
-- [x] 5.3 Expired-plan user redirected to `/renewal` from `/dashboard` and `/profile`
-- [x] 5.4 Non-expired user never gated; direct `/renewal` visit bounces to `/dashboard`
-- [x] 5.5 After renewal, user no longer gated and sees the new plan
-- [x] 5.6 Un-onboarded user still routed to `/onboarding`, not `/renewal`
-- [x] 5.7 Transient plan-read error falls open to the requested route
+- [x] 5.3 Expired-plan user redirected to `/renewal` from `/dashboard` and `/profile` — 930b91d
+- [x] 5.4 Non-expired user never gated; direct `/renewal` visit bounces to `/dashboard` — 930b91d
+- [x] 5.5 After renewal, user no longer gated and sees the new plan — 930b91d
+- [x] 5.6 Un-onboarded user still routed to `/onboarding`, not `/renewal` — 930b91d
+- [x] 5.7 Transient plan-read error falls open to the requested route — 930b91d
