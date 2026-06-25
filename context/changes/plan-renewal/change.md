@@ -3,7 +3,7 @@ change_id: plan-renewal
 title: Plan renewal — expiry check-in and new AI plan generation
 status: implementing
 created: 2026-06-18
-updated: 2026-06-18
+updated: 2026-06-25
 archived_at: null
 ---
 

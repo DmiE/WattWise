@@ -362,31 +362,31 @@ One new migration (Phase 1 RPC). Apply with `npx supabase db push --linked`, the
 
 #### Automated
 
-- [x] 3.1 Type checking passes: `npm run build`
-- [x] 3.2 Linting passes: `npm run lint`
+- [x] 3.1 Type checking passes: `npm run build` — d224f4d
+- [x] 3.2 Linting passes: `npm run lint` — d224f4d
 
 #### Manual
 
-- [x] 3.3 POST with expired plan → new plan; old plan superseded; one active plan with sessions
-- [x] 3.4 POST with non-expired plan → 409
-- [x] 3.5 Power-meter without ftp_watts → 400; with it → ftp_source='measured'
-- [x] 3.6 Generation failure leaves old plan active and profile unchanged
-- [x] 3.7 Persist failure after profile update leaves old plan active; retry succeeds
+- [x] 3.3 POST with expired plan → new plan; old plan superseded; one active plan with sessions — d224f4d
+- [x] 3.4 POST with non-expired plan → 409 — d224f4d
+- [x] 3.5 Power-meter without ftp_watts → 400; with it → ftp_source='measured' — d224f4d
+- [x] 3.6 Generation failure leaves old plan active and profile unchanged — d224f4d
+- [x] 3.7 Persist failure after profile update leaves old plan active; retry succeeds — d224f4d
 
 ### Phase 4: Renewal page + form island
 
 #### Automated
 
-- [ ] 4.1 Type checking passes: `npm run build`
-- [ ] 4.2 Linting passes: `npm run lint`
-- [ ] 4.3 Dev server serves `/renewal` without runtime error
+- [x] 4.1 Type checking passes: `npm run build`
+- [x] 4.2 Linting passes: `npm run lint`
+- [x] 4.3 Dev server serves `/renewal` without runtime error
 
 #### Manual
 
-- [ ] 4.4 `/renewal` shows current values prefilled
-- [ ] 4.5 FTP field shown only for power-meter users
-- [ ] 4.6 Submit shows progress UI then lands on `/dashboard` with the new plan
-- [ ] 4.7 Validation errors show inline and block submit
+- [x] 4.4 `/renewal` shows current values prefilled
+- [x] 4.5 FTP field shown only for power-meter users
+- [x] 4.6 Submit shows progress UI then lands on `/dashboard` with the new plan
+- [x] 4.7 Validation errors show inline and block submit
 
 ### Phase 5: Middleware renewal gate
 

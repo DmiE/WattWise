@@ -1,0 +1,57 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import RenewalForm from "@/components/renewal/RenewalForm";
+import { createClient } from "@/lib/supabase";
+import { getProfile } from "@/lib/services/profile";
+import { getActivePlan, isPlanExpired } from "@/lib/services/plan";
+import type { Profile } from "@/types";
+
+// Auth is gated centrally in middleware (/renewal is in PROTECTED_ROUTES), so an
+// unauthenticated request never reaches this page. The renewal gate in
+// middleware is the primary eligibility check; the fetch-and-guard below is a
+// defensive cover mirroring profile.astro's fetch-and-pass + fail-open posture.
+const { user } = Astro.locals;
+
+let profile: Profile | null = null;
+if (user) {
+  const supabase = createClient(Astro.request.headers, Astro.cookies);
+  if (supabase) {
+    try {
+      profile = await getProfile(supabase, user.id);
+    } catch {
+      // Transient read failure — don't 500 the page; send the user back to the
+      // dashboard (its own gating decides where they belong).
+      return Astro.redirect("/dashboard");
+    }
+
+    // Defensive eligibility guard (middleware is the primary gate): a renewal is
+    // only valid when an active plan exists AND has expired. Anyone else lands
+    // back on the dashboard.
+    if (profile) {
+      const todayIso = new Date().toISOString().slice(0, 10);
+      try {
+        const active = await getActivePlan(supabase, user.id);
+        if (!active || !isPlanExpired(active, todayIso)) {
+          return Astro.redirect("/dashboard");
+        }
+      } catch {
+        return Astro.redirect("/dashboard");
+      }
+    }
+  }
+}
+
+// No profile row → user hasn't onboarded. Defensive cover (middleware already
+// gates this) — route them to onboarding.
+if (!profile) {
+  return Astro.redirect("/onboarding");
+}
+---
+
+<Layout title="Renew your plan">
+  <div class="bg-cosmic flex min-h-screen flex-col items-center p-4">
+    <div class="flex w-full flex-1 items-start justify-center pt-8">
+      <RenewalForm client:load profile={profile} />
+    </div>
+  </div>
+</Layout>
