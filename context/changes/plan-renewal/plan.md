@@ -377,28 +377,28 @@ One new migration (Phase 1 RPC). Apply with `npx supabase db push --linked`, the
 
 #### Automated
 
-- [x] 4.1 Type checking passes: `npm run build`
-- [x] 4.2 Linting passes: `npm run lint`
-- [x] 4.3 Dev server serves `/renewal` without runtime error
+- [x] 4.1 Type checking passes: `npm run build` — d24fbfc
+- [x] 4.2 Linting passes: `npm run lint` — d24fbfc
+- [x] 4.3 Dev server serves `/renewal` without runtime error — d24fbfc
 
 #### Manual
 
-- [x] 4.4 `/renewal` shows current values prefilled
-- [x] 4.5 FTP field shown only for power-meter users
-- [x] 4.6 Submit shows progress UI then lands on `/dashboard` with the new plan
-- [x] 4.7 Validation errors show inline and block submit
+- [x] 4.4 `/renewal` shows current values prefilled — d24fbfc
+- [x] 4.5 FTP field shown only for power-meter users — d24fbfc
+- [x] 4.6 Submit shows progress UI then lands on `/dashboard` with the new plan — d24fbfc
+- [x] 4.7 Validation errors show inline and block submit — d24fbfc
 
 ### Phase 5: Middleware renewal gate
 
 #### Automated
 
-- [ ] 5.1 Type checking passes: `npm run build`
-- [ ] 5.2 Linting passes: `npm run lint`
+- [x] 5.1 Type checking passes: `npm run build`
+- [x] 5.2 Linting passes: `npm run lint`
 
 #### Manual
 
-- [ ] 5.3 Expired-plan user redirected to `/renewal` from `/dashboard` and `/profile`
-- [ ] 5.4 Non-expired user never gated; direct `/renewal` visit bounces to `/dashboard`
-- [ ] 5.5 After renewal, user no longer gated and sees the new plan
-- [ ] 5.6 Un-onboarded user still routed to `/onboarding`, not `/renewal`
-- [ ] 5.7 Transient plan-read error falls open to the requested route
+- [x] 5.3 Expired-plan user redirected to `/renewal` from `/dashboard` and `/profile`
+- [x] 5.4 Non-expired user never gated; direct `/renewal` visit bounces to `/dashboard`
+- [x] 5.5 After renewal, user no longer gated and sees the new plan
+- [x] 5.6 Un-onboarded user still routed to `/onboarding`, not `/renewal`
+- [x] 5.7 Transient plan-read error falls open to the requested route
