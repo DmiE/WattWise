@@ -12,6 +12,10 @@
  */
 export function formatSessionDate(iso: string, opts?: { weekday?: boolean }): string {
   const [year, month, day] = iso.split("-").map(Number);
+  // Guard malformed/empty input: NaN components would render "Invalid Date".
+  if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day)) {
+    return iso;
+  }
   return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString(undefined, {
     ...(opts?.weekday ? { weekday: "short" } : {}),
     month: "short",
