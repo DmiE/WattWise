@@ -681,13 +681,13 @@ Vitest 4.x pin, chosen so Phases 2–4 can add `@cloudflare/vitest-plugin`
 
 #### Automated
 
-- [x] 5.1 `npm test` passes
-- [x] 5.2 `.safeParse` → `.parse` turns the `null`-input test red
-- [x] 5.3 `npm run lint` and `npm run build` pass
+- [x] 5.1 `npm test` passes — 8e7c3fc
+- [x] 5.2 `.safeParse` → `.parse` turns the `null`-input test red — 8e7c3fc
+- [x] 5.3 `npm run lint` and `npm run build` pass — 8e7c3fc
 
 #### Manual
 
-- [x] 5.4 Accumulation test asserts on codes, not message text or ordering
+- [x] 5.4 Accumulation test asserts on codes, not message text or ordering — 8e7c3fc
   > Verified 2026-09-07 against the running suite, not the source alone. Two
   > mutations of `plan.ts`, each run and reverted: reversing the returned
   > `issues` array (both the schema and guardrail branches) left all 23 tests
@@ -695,7 +695,7 @@ Vitest 4.x pin, chosen so Phases 2–4 can add `@cloudflare/vitest-plugin`
   > `message` templates to a constant left all 23 green, so no assertion reads
   > message wording. The accumulation test itself sorts codes before comparing,
   > which is why the ordering mutation cannot reach it.
-- [x] 5.5 No test touches `equipment_mismatch`
+- [x] 5.5 No test touches `equipment_mismatch` — 8e7c3fc
   > Verified 2026-09-07. `grep` over `plan.test.ts` and `__fixtures__/` returns
   > one occurrence — a comment recording that the accumulation test pairs
   > `unavailable_day` with `duration_over_cap` *because* target-kind vs declared
@@ -708,12 +708,35 @@ Vitest 4.x pin, chosen so Phases 2–4 can add `@cloudflare/vitest-plugin`
 
 #### Automated
 
-- [ ] 6.1 `npm test`, `npm run lint`, `npm run build` all pass
-- [ ] 6.2 §6.1 contains no "TBD"
-- [ ] 6.3 §3 status updated
+- [x] 6.1 `npm test`, `npm run lint`, `npm run build` all pass
+- [x] 6.2 §6.1 contains no "TBD"
+- [x] 6.3 §3 status updated
 
 #### Manual
 
-- [ ] 6.4 §7 entries each name a re-evaluation trigger
-- [ ] 6.5 §6.1 carries the `getViteConfig()` warning and issue link
-- [ ] 6.6 Phase 5 note explains why the residue is not an AI-native problem
+- [x] 6.4 §7 entries each name a re-evaluation trigger
+  > Verified 2026-09-07 by extraction, not by reading: every top-level bullet
+  > in §7 was parsed and matched against a `Re-evaluate …` clause — 8 of 8
+  > carry one, including the three added here (zone/%FTP → "when the zone table
+  > and the 5-vs-7 question are settled"; plan completeness → "when a coverage
+  > rule is decided"; weekend caps 360–600 → "if either the 600 input bound or
+  > the 360 session ceiling changes"). Each new entry also cites the research
+  > question that blocks it (A1–A3, A4/A5, A6).
+- [x] 6.5 §6.1 carries the `getViteConfig()` warning and issue link
+  > Verified 2026-09-07 against the §6.1 slice with whitespace normalised — an
+  > initial substring check false-negatived only because "exports is not
+  > defined" wraps a line. Present: the "do not use `getViteConfig()`" heading,
+  > all three sequenced errors (`resolve.external`, `exports is not defined`,
+  > `wrapDynamicImport`), the issue link `issues/15878`, and the revisit
+  > condition naming the `astro#17248` fix.
+- [x] 6.6 Phase 5 note explains why the residue is not an AI-native problem
+  > Verified 2026-09-07 by reading §7.1 in full. It names the residue — a
+  > missing deterministic rule (zones) plus a missing completeness check — and
+  > argues an AI reviewer fixes neither: it cannot supply a zone table nobody
+  > has decided on, and would judge a one-session plan case by case where the
+  > product needs one rule. Concludes Phase 5 stays `not started`, re-decided
+  > after A1–A4.
+  >
+  > Also checked while editing: both markdown tables touched in §3 and §4 still
+  > have matching header/row column counts (8 and 5), so the pipe-heavy §4 note
+  > did not break either table.
