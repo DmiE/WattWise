@@ -585,10 +585,10 @@ Vitest 4.x pin, chosen so Phases 2–4 can add `@cloudflare/vitest-plugin`
 
 #### Automated
 
-- [x] 1.1 `npm test` runs and the smoke test passes
-- [x] 1.2 `npm run lint` passes with the new `.ts` files present
-- [x] 1.3 `npm run build` still passes
-- [x] 1.4 `npx tsc --noEmit` clean for config and test file
+- [x] 1.1 `npm test` runs and the smoke test passes — d631253
+- [x] 1.2 `npm run lint` passes with the new `.ts` files present — d631253
+- [x] 1.3 `npm run build` still passes — d631253
+- [x] 1.4 `npx tsc --noEmit` clean for config and test file — d631253
 
 #### Manual
 
@@ -596,7 +596,7 @@ Vitest 4.x pin, chosen so Phases 2–4 can add `@cloudflare/vitest-plugin`
   > Skipped by decision 2026-09-07: low signal (`test:watch` is `vitest` minus
   > `run`, and `vitest run` is green), and not agent-verifiable — Vitest
   > auto-disables watch when stdout is not a TTY.
-- [x] 1.6 The `@/*` alias resolves
+- [x] 1.6 The `@/*` alias resolves — d631253
 - [ ] 1.7 CI shows `test` between `lint` and `build`
   > Deferred by decision 2026-09-07: unobservable until the commit is pushed.
   > YAML verified by inspection; tick once CI is green on the pushed commit.
@@ -605,14 +605,20 @@ Vitest 4.x pin, chosen so Phases 2–4 can add `@cloudflare/vitest-plugin`
 
 #### Automated
 
-- [ ] 2.1 `npm test` passes
-- [ ] 2.2 Default fixtures validate as `{ ok: true }`
-- [ ] 2.3 `npm run lint` and `npm run build` pass
+- [x] 2.1 `npm test` passes
+- [x] 2.2 Default fixtures validate as `{ ok: true }`
+- [x] 2.3 `npm run lint` and `npm run build` pass
 
 #### Manual
 
-- [ ] 2.4 Default values inside every DB CHECK
-- [ ] 2.5 `max_weekend_minutes` default below 360
+- [x] 2.4 Default values inside every DB CHECK
+  > Verified by inspection 2026-09-07: `makeProfile()` defaults checked
+  > field-by-field against the nine constraints in `init_mvp_schema.sql:50-69`,
+  > including the two conditional ones (`power_meter_requires_ftp`,
+  > `fitness_level_matches_ftp_source`).
+- [x] 2.5 `max_weekend_minutes` default below 360
+  > Verified by inspection 2026-09-07: `FIXTURE_WEEKEND_CAP_MIN = 180`, with the
+  > A6 rationale recorded in its docblock.
 
 ### Phase 3: Availability containment
 
