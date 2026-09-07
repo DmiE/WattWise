@@ -261,3 +261,113 @@ describe("validateGeneratedPlan — segment sum", () => {
     },
   );
 });
+
+// --- Rejection semantics ---
+//
+// Oracle: rejection is a decision the archive records explicitly, not an
+// accident of the implementation. "Hard reject + retry on mismatch (no
+// coercion) … coercion = silently wrong numbers"
+// (`context/archive/2026-06-10-first-plan-generation/plan-brief.md:30`), and
+// "a violation is a hard zod/refinement failure → retry, not a persist"
+// (`plan.md:55`). The orchestrator re-prompts; it never repairs.
+//
+// This is the property that makes the availability and duration tests above
+// mean anything. Those tests prove the validator *notices* a violation. They
+// say nothing about what it does next — a validator that noticed an over-cap
+// session, clamped it to the cap, and returned `ok: true` would keep every one
+// of them green while Risk #1 came true in production: a semantically wrong
+// plan persisted, with the wrongness now invisible because the numbers look
+// legal. Nothing in the code prevents that refactor today; these tests are what
+// prevent it.
+//
+// Three separable claims, because a lenient refactor could take any one of
+// them alone: the rejection is whole-plan (no session is salvaged), no value is
+// repaired on the way through, and every violation is reported rather than just
+// the first.
+
+describe("validateGeneratedPlan — rejects the whole plan", () => {
+  it("returns no plan at all when one session of several is invalid", () => {
+    // Two sessions, one of them on a Tuesday the fixture profile never
+    // declared. The other is untouched and would validate on its own — which
+    // is the point: a "salvage what parses" refactor would return a one-session
+    // plan here, and the cyclist would silently receive two thirds of a
+    // training week with no indication anything was dropped.
+    const payload = makePlanPayload({
+      sessions: [makeSession({ day_index: 1 }), makeSession({ day_index: 2 })],
+    });
+
+    const result = validateGeneratedPlan(payload, makeProfile());
+
+    expect(rejectionCodes(result)).toEqual(["unavailable_day"]);
+    // Asserted on the result shape rather than on a session count: a partial
+    // plan cannot be returned if there is no `plan` property to carry it.
+    expect(result).not.toHaveProperty("plan");
+  });
+
+  it("does not repair an over-cap session, in the result or in the input", () => {
+    const overCapMin = FIXTURE_WORKDAY_CAP_MIN + 30;
+    const makeOverCapPayload = () =>
+      makePlanPayload({
+        sessions: [makeSession({ day_index: 1, planned_duration_min: overCapMin })],
+      });
+    const payload = makeOverCapPayload();
+
+    const result = validateGeneratedPlan(payload, makeProfile());
+
+    expect(rejectionCodes(result)).toEqual(["duration_over_cap"]);
+    expect(result).not.toHaveProperty("plan");
+    // The caller's payload is checked too, because clamping in place is the
+    // cheaper way to write the lenient refactor and would leave the returned
+    // result looking exactly as it does now.
+    expect(payload).toEqual(makeOverCapPayload());
+  });
+});
+
+describe("validateGeneratedPlan — issue accumulation", () => {
+  // The third claim: the loop reports every violation it finds, rather than
+  // returning at the first one. This is a diagnosability guarantee, and it has
+  // teeth here because the orchestrator's response to a rejection is to re-send
+  // an identical prompt (`src/pages/api/plans/generate.ts:71-77`). A validator
+  // that surfaced one violation at a time would need one full model round-trip
+  // per problem to work through a plan that had two, and the retry budget is
+  // finite — so "first issue only" degrades into a failed generation the
+  // cyclist sees, not merely a thinner error list.
+  it("reports every violation on a session, not just the first", () => {
+    // One session, two independent violations: day_index 2 is a Tuesday the
+    // fixture profile never declared, and the duration is one minute over the
+    // workday cap. Deliberately not `equipment_mismatch` — target-kind vs
+    // declared equipment is Risk #3 and gets its own research pass.
+    const payload = makePlanPayload({
+      sessions: [makeSession({ day_index: 2, planned_duration_min: FIXTURE_WORKDAY_CAP_MIN + 1 })],
+    });
+
+    const codes = rejectionCodes(validateGeneratedPlan(payload, makeProfile()));
+
+    // Sorted, so the assertion is on the set of codes and not on the order the
+    // validator happens to push them in. Ordering is not part of the contract.
+    expect([...codes].sort()).toEqual(["duration_over_cap", "unavailable_day"]);
+  });
+});
+
+// Input that fails zod outright, before any guardrail runs. `raw` is whatever
+// `JSON.parse` returned from a model response, so these shapes are reachable in
+// production, not hypothetical.
+const MALFORMED_PAYLOADS: { label: string; payload: unknown }[] = [
+  { label: "null", payload: null },
+  { label: "an object with no sessions key", payload: {} },
+];
+
+describe("validateGeneratedPlan — malformed input", () => {
+  // `.safeParse` (`plan.ts:67`) is the only reason these return rather than
+  // throw. A refactor to `.parse` would raise a ZodError out of the validator,
+  // past the orchestrator's retry branch, and out of the route as a 500 — the
+  // cyclist would see a crash where the contract says they should see a retry.
+  // Asserting the *return* is therefore the assertion; a throw fails the test
+  // by escaping it.
+  it.each(MALFORMED_PAYLOADS)("rejects $label with a schema issue rather than throwing", ({ payload }) => {
+    const result = validateGeneratedPlan(payload, makeProfile());
+
+    expect(rejectionCodes(result)).toEqual(["schema"]);
+    expect(result).not.toHaveProperty("plan");
+  });
+});

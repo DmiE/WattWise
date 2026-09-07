@@ -651,14 +651,14 @@ Vitest 4.x pin, chosen so Phases 2–4 can add `@cloudflare/vitest-plugin`
 
 #### Automated
 
-- [x] 4.1 `npm test` passes
-- [x] 4.2 Swapping caps at `plan.ts:98` turns the cap-selection test red
-- [x] 4.3 Changing `>` to `>=` at `plan.ts:99` turns the boundary test red
-- [x] 4.4 `npm run lint` and `npm run build` pass
+- [x] 4.1 `npm test` passes — 7a22c46
+- [x] 4.2 Swapping caps at `plan.ts:98` turns the cap-selection test red — 7a22c46
+- [x] 4.3 Changing `>` to `>=` at `plan.ts:99` turns the boundary test red — 7a22c46
+- [x] 4.4 `npm run lint` and `npm run build` pass — 7a22c46
 
 #### Manual
 
-- [x] 4.5 No fixture uses a weekend cap of 360 or above
+- [x] 4.5 No fixture uses a weekend cap of 360 or above — 7a22c46
   > Verified 2026-09-07 by grep plus a runtime read. `FIXTURE_WEEKEND_CAP_MIN =
   > 180` is the only weekend-cap value in fixtures or tests; all eight
   > `makeProfile(` calls in `plan.test.ts` override only `available_days` and
@@ -666,7 +666,7 @@ Vitest 4.x pin, chosen so Phases 2–4 can add `@cloudflare/vitest-plugin`
   > against the running suite rather than the source alone — the parameterised
   > test names print the live caps as `exactly 90 minutes` / `exactly 180
   > minutes`.
-- [x] 4.6 A comment records the A6 rationale
+- [x] 4.6 A comment records the A6 rationale — 7a22c46
   > Verified 2026-09-07. The duration-caps section header records the
   > 600-vs-360 contradiction, the resulting unreachability of
   > `duration_over_cap`, and — the part that protects the tests — that the
@@ -681,14 +681,28 @@ Vitest 4.x pin, chosen so Phases 2–4 can add `@cloudflare/vitest-plugin`
 
 #### Automated
 
-- [ ] 5.1 `npm test` passes
-- [ ] 5.2 `.safeParse` → `.parse` turns the `null`-input test red
-- [ ] 5.3 `npm run lint` and `npm run build` pass
+- [x] 5.1 `npm test` passes
+- [x] 5.2 `.safeParse` → `.parse` turns the `null`-input test red
+- [x] 5.3 `npm run lint` and `npm run build` pass
 
 #### Manual
 
-- [ ] 5.4 Accumulation test asserts on codes, not message text or ordering
-- [ ] 5.5 No test touches `equipment_mismatch`
+- [x] 5.4 Accumulation test asserts on codes, not message text or ordering
+  > Verified 2026-09-07 against the running suite, not the source alone. Two
+  > mutations of `plan.ts`, each run and reverted: reversing the returned
+  > `issues` array (both the schema and guardrail branches) left all 23 tests
+  > green, so no assertion depends on issue ordering; rewriting all six issue
+  > `message` templates to a constant left all 23 green, so no assertion reads
+  > message wording. The accumulation test itself sorts codes before comparing,
+  > which is why the ordering mutation cannot reach it.
+- [x] 5.5 No test touches `equipment_mismatch`
+  > Verified 2026-09-07. `grep` over `plan.test.ts` and `__fixtures__/` returns
+  > one occurrence — a comment recording that the accumulation test pairs
+  > `unavailable_day` with `duration_over_cap` *because* target-kind vs declared
+  > equipment is Risk #3 and awaits its own research pass. Confirmed at runtime
+  > too: throwing from the `equipment_mismatch` push in `plan.ts` left all 23
+  > tests green, so no test reaches that branch at all — a stronger claim than
+  > no test asserting on the code.
 
 ### Phase 6: Cookbook and deferred-gap recording
 
