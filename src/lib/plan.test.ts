@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { makePlanPayload, makeSession } from "@/lib/__fixtures__/plan-payload";
-import { makeProfile } from "@/lib/__fixtures__/profile";
+import {
+  FIXTURE_SESSION_DURATION_MIN,
+  makePlanPayload,
+  makeSegment,
+  makeSession,
+} from "@/lib/__fixtures__/plan-payload";
+import { FIXTURE_WEEKEND_CAP_MIN, FIXTURE_WORKDAY_CAP_MIN, makeProfile } from "@/lib/__fixtures__/profile";
 import {
   validateGeneratedPlan,
   weekdayForDayIndex,
@@ -121,4 +126,138 @@ describe("validateGeneratedPlan — weekday anchor", () => {
     expect(onDeclaredDay).toEqual({ ok: true, plan: payload });
     expect(rejectionCodes(onUndeclaredDay)).toEqual(["unavailable_day"]);
   });
+});
+
+// --- Duration caps ---
+//
+// Oracle: the cyclist declares two ceilings, and a session may not exceed the
+// one matching its day type — "`planned_duration_min` ≤ the relevant cap
+// (`max_weekend_minutes` for sat/sun, else `max_workday_minutes`)"
+// (`context/archive/2026-06-10-first-plan-generation/plan.md:55`, restated as
+// guardrail (c) at `:129`). The brief's acceptance criterion says the same from
+// the cyclist's side: sessions "none over duration caps" (`plan-brief.md:64`).
+// A violation is "a hard zod/refinement failure → retry, not a persist"
+// (`plan.md:55`) — so the expected result is a rejection, never a clamped value.
+//
+// The relation is `≤`, which is why a session *exactly at* the cap is expected
+// to pass. Both boundary sides are asserted because an off-by-one — a `>`
+// weakened to `>=`, or the reverse — is the realistic regression here, and
+// either side alone would miss one direction of it.
+//
+// Cap values come from the fixture profile's declared ceilings, not from
+// re-reading the comparison in `plan.ts`.
+//
+// Research A6 — why no case here raises the weekend cap. `max_weekend_minutes`
+// accepts up to 600 (`onboarding-schema.ts:36`, DB `:55`) while
+// `planned_duration_min` is hard-capped at 360 by both zod
+// (`plan-schema.ts:68`) and the DB (`:160`), so for any weekend cap of 360 or
+// more the `duration_over_cap` branch is unreachable: zod rejects the
+// over-cap session first and the issue comes back as `schema`. The `cap + 1`
+// probe below therefore depends on the fixture cap staying under 360 — raise
+// it and these tests would still pass while asserting a different rule. The
+// 600-vs-360 contradiction is recorded as a product question, not fixed here.
+
+const CAP_BOUNDARY_CASES: { dayType: string; dayIndex: number; weekday: string; cap: number }[] = [
+  { dayType: "workday", dayIndex: 1, weekday: "mon", cap: FIXTURE_WORKDAY_CAP_MIN },
+  { dayType: "weekend", dayIndex: 6, weekday: "sat", cap: FIXTURE_WEEKEND_CAP_MIN },
+];
+
+/**
+ * A duration strictly between the two fixture caps: over the workday ceiling,
+ * inside the weekend one. Derived from the profile's declared caps so it stays
+ * meaningful if either fixture value moves.
+ */
+const BETWEEN_CAPS_MIN = Math.round((FIXTURE_WORKDAY_CAP_MIN + FIXTURE_WEEKEND_CAP_MIN) / 2);
+
+describe("validateGeneratedPlan — duration caps", () => {
+  it.each(CAP_BOUNDARY_CASES)(
+    "accepts a $dayType session of exactly $cap minutes and rejects it one minute over",
+    ({ dayIndex, weekday, cap }) => {
+      // Only the day under test is declared available, so an `unavailable_day`
+      // issue cannot mask — or be mistaken for — the cap result.
+      const profile = makeProfile({ available_days: [weekday] });
+      const atCap = makePlanPayload({ sessions: [makeSession({ day_index: dayIndex, planned_duration_min: cap })] });
+      const overCap = makePlanPayload({
+        sessions: [makeSession({ day_index: dayIndex, planned_duration_min: cap + 1 })],
+      });
+
+      expect(validateGeneratedPlan(atCap, profile)).toEqual({ ok: true, plan: atCap });
+      expect(rejectionCodes(validateGeneratedPlan(overCap, profile))).toEqual(["duration_over_cap"]);
+    },
+  );
+
+  // The pairing is the point: one duration, two opposite verdicts decided only
+  // by the day type. Either cap asserted in isolation would still pass if the
+  // ternary at `plan.ts:98` were swapped, because each cap alone is applied
+  // consistently — only comparing the two day types exposes the swap. Both
+  // weekend days are covered, since a weekend set that lost `sun` would
+  // otherwise silently fall back to the stricter workday cap.
+  it.each([
+    { weekday: "sat", dayIndex: 6 },
+    { weekday: "sun", dayIndex: 7 },
+  ])(
+    "applies the weekend cap on $weekday and the workday cap on mon for the same duration",
+    ({ weekday, dayIndex }) => {
+      const profile = makeProfile({ available_days: ["mon", weekday] });
+      const onWeekend = makePlanPayload({
+        sessions: [makeSession({ day_index: dayIndex, planned_duration_min: BETWEEN_CAPS_MIN })],
+      });
+      const onWorkday = makePlanPayload({
+        sessions: [makeSession({ day_index: 1, planned_duration_min: BETWEEN_CAPS_MIN })],
+      });
+
+      expect(validateGeneratedPlan(onWeekend, profile)).toEqual({ ok: true, plan: onWeekend });
+      expect(rejectionCodes(validateGeneratedPlan(onWorkday, profile))).toEqual(["duration_over_cap"]);
+    },
+  );
+});
+
+// The segment-sum invariant belongs to the cap guardrail rather than sitting
+// beside it. `planned_duration_min` is the only number the cap check and the
+// dashboard ever read, so if the segments a cyclist actually rides sum to
+// something else, the declared figure is fiction and the cap it passed means
+// nothing — a 90-minute-capped session whose segments total 150 is an
+// over-cap ride that validated. The rule is stated in the prompt (system rule
+// 3) and in the JSON-Schema description handed to the model, and the gap
+// between those statements and the validator was raised and closed as a
+// deliberate fix (`context/archive/2026-06-10-first-plan-generation/reviews/impl-review-phase-2.md:37-43`).
+//
+// Asserted in both directions: the equality is what makes the declared figure
+// trustworthy, and a check weakened to a one-sided comparison would still
+// catch one of these two while letting the other through.
+const SUM_MISMATCH_CASES: { direction: string; segmentDurations: number[] }[] = [
+  { direction: "above", segmentDurations: [FIXTURE_WORKDAY_CAP_MIN, 60] },
+  { direction: "below", segmentDurations: [30] },
+];
+
+/** Comfortably inside the workday cap — see the note on the test below. */
+const DECLARED_DURATION_MIN = FIXTURE_SESSION_DURATION_MIN;
+
+describe("validateGeneratedPlan — segment sum", () => {
+  it.each(SUM_MISMATCH_CASES)(
+    "rejects a session whose segments sum $direction its declared planned_duration_min",
+    ({ segmentDurations }) => {
+      // The declared duration sits well inside the workday cap, so the cap
+      // check passes on its own and `duration_mismatch` is the only issue
+      // expected. Deliberately *not* at the cap boundary: a session declared
+      // at exactly the cap makes these tests red under a cap regression too,
+      // and a failure named "segments sum above" would then point at the wrong
+      // rule. The "above" case still carries the harm this rule exists to
+      // catch — 150 minutes of real segments behind a 60-minute declaration,
+      // which is a ride well over the 90-minute cap it just passed.
+      const payload = makePlanPayload({
+        sessions: [
+          makeSession({
+            day_index: 1,
+            planned_duration_min: DECLARED_DURATION_MIN,
+            segments: segmentDurations.map((duration_min) => makeSegment({ duration_min })),
+          }),
+        ],
+      });
+
+      const result = validateGeneratedPlan(payload, makeProfile());
+
+      expect(rejectionCodes(result)).toEqual(["duration_mismatch"]);
+    },
+  );
 });

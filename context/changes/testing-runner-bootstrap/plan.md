@@ -651,15 +651,31 @@ Vitest 4.x pin, chosen so Phases 2–4 can add `@cloudflare/vitest-plugin`
 
 #### Automated
 
-- [ ] 4.1 `npm test` passes
-- [ ] 4.2 Swapping caps at `plan.ts:98` turns the cap-selection test red
-- [ ] 4.3 Changing `>` to `>=` at `plan.ts:99` turns the boundary test red
-- [ ] 4.4 `npm run lint` and `npm run build` pass
+- [x] 4.1 `npm test` passes
+- [x] 4.2 Swapping caps at `plan.ts:98` turns the cap-selection test red
+- [x] 4.3 Changing `>` to `>=` at `plan.ts:99` turns the boundary test red
+- [x] 4.4 `npm run lint` and `npm run build` pass
 
 #### Manual
 
-- [ ] 4.5 No fixture uses a weekend cap of 360 or above
-- [ ] 4.6 A comment records the A6 rationale
+- [x] 4.5 No fixture uses a weekend cap of 360 or above
+  > Verified 2026-09-07 by grep plus a runtime read. `FIXTURE_WEEKEND_CAP_MIN =
+  > 180` is the only weekend-cap value in fixtures or tests; all eight
+  > `makeProfile(` calls in `plan.test.ts` override only `available_days` and
+  > none touches a cap; no code line carries a numeric literal ≥ 360. Confirmed
+  > against the running suite rather than the source alone — the parameterised
+  > test names print the live caps as `exactly 90 minutes` / `exactly 180
+  > minutes`.
+- [x] 4.6 A comment records the A6 rationale
+  > Verified 2026-09-07. The duration-caps section header records the
+  > 600-vs-360 contradiction, the resulting unreachability of
+  > `duration_over_cap`, and — the part that protects the tests — that the
+  > `cap + 1` probe depends on the fixture cap staying under 360.
+  >
+  > The claim was checked empirically, not just reasoned: with
+  > `max_weekend_minutes: 600` and a 400-minute session the validator returns
+  > two `schema` issues (`Too big: expected number to be <=360`) and never
+  > `duration_over_cap`. Probe file was throwaway and is not committed.
 
 ### Phase 5: Rejection semantics
 
