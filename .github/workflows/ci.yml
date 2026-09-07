@@ -18,6 +18,10 @@ jobs:
       - run: npm ci
       - run: npx astro sync
       - run: npm run lint
+      # Unit gate. No SUPABASE_* env here: unlike `build`, the test run never
+      # resolves the astro:env schema. Placed before `build` so a failing test
+      # short-circuits the slower step.
+      - run: npm test
       - run: npm run build
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
