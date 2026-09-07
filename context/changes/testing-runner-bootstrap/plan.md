@@ -708,13 +708,13 @@ Vitest 4.x pin, chosen so Phases 2–4 can add `@cloudflare/vitest-plugin`
 
 #### Automated
 
-- [x] 6.1 `npm test`, `npm run lint`, `npm run build` all pass
-- [x] 6.2 §6.1 contains no "TBD"
-- [x] 6.3 §3 status updated
+- [x] 6.1 `npm test`, `npm run lint`, `npm run build` all pass — 53385e9
+- [x] 6.2 §6.1 contains no "TBD" — 53385e9
+- [x] 6.3 §3 status updated — 53385e9
 
 #### Manual
 
-- [x] 6.4 §7 entries each name a re-evaluation trigger
+- [x] 6.4 §7 entries each name a re-evaluation trigger — 53385e9
   > Verified 2026-09-07 by extraction, not by reading: every top-level bullet
   > in §7 was parsed and matched against a `Re-evaluate …` clause — 8 of 8
   > carry one, including the three added here (zone/%FTP → "when the zone table
@@ -722,14 +722,14 @@ Vitest 4.x pin, chosen so Phases 2–4 can add `@cloudflare/vitest-plugin`
   > rule is decided"; weekend caps 360–600 → "if either the 600 input bound or
   > the 360 session ceiling changes"). Each new entry also cites the research
   > question that blocks it (A1–A3, A4/A5, A6).
-- [x] 6.5 §6.1 carries the `getViteConfig()` warning and issue link
+- [x] 6.5 §6.1 carries the `getViteConfig()` warning and issue link — 53385e9
   > Verified 2026-09-07 against the §6.1 slice with whitespace normalised — an
   > initial substring check false-negatived only because "exports is not
   > defined" wraps a line. Present: the "do not use `getViteConfig()`" heading,
   > all three sequenced errors (`resolve.external`, `exports is not defined`,
   > `wrapDynamicImport`), the issue link `issues/15878`, and the revisit
   > condition naming the `astro#17248` fix.
-- [x] 6.6 Phase 5 note explains why the residue is not an AI-native problem
+- [x] 6.6 Phase 5 note explains why the residue is not an AI-native problem — 53385e9
   > Verified 2026-09-07 by reading §7.1 in full. It names the residue — a
   > missing deterministic rule (zones) plus a missing completeness check — and
   > argues an AI reviewer fixes neither: it cannot supply a zone table nobody

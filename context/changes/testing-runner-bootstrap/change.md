@@ -1,7 +1,7 @@
 ---
 change_id: testing-runner-bootstrap
 title: Runner bootstrap + trust-boundary units
-status: implementing
+status: implemented
 created: 2026-09-06
 updated: 2026-09-07
 ---
