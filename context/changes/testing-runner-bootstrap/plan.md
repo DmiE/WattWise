@@ -605,18 +605,18 @@ Vitest 4.x pin, chosen so Phases 2–4 can add `@cloudflare/vitest-plugin`
 
 #### Automated
 
-- [x] 2.1 `npm test` passes
-- [x] 2.2 Default fixtures validate as `{ ok: true }`
-- [x] 2.3 `npm run lint` and `npm run build` pass
+- [x] 2.1 `npm test` passes — e88d651
+- [x] 2.2 Default fixtures validate as `{ ok: true }` — e88d651
+- [x] 2.3 `npm run lint` and `npm run build` pass — e88d651
 
 #### Manual
 
-- [x] 2.4 Default values inside every DB CHECK
+- [x] 2.4 Default values inside every DB CHECK — e88d651
   > Verified by inspection 2026-09-07: `makeProfile()` defaults checked
   > field-by-field against the nine constraints in `init_mvp_schema.sql:50-69`,
   > including the two conditional ones (`power_meter_requires_ftp`,
   > `fitness_level_matches_ftp_source`).
-- [x] 2.5 `max_weekend_minutes` default below 360
+- [x] 2.5 `max_weekend_minutes` default below 360 — e88d651
   > Verified by inspection 2026-09-07: `FIXTURE_WEEKEND_CAP_MIN = 180`, with the
   > A6 rationale recorded in its docblock.
 
@@ -624,14 +624,22 @@ Vitest 4.x pin, chosen so Phases 2–4 can add `@cloudflare/vitest-plugin`
 
 #### Automated
 
-- [ ] 3.1 `npm test` passes
-- [ ] 3.2 Commenting out `plan.ts:91-96` turns at least two tests red
-- [ ] 3.3 `npm run lint` and `npm run build` pass
+- [x] 3.1 `npm test` passes
+- [x] 3.2 Commenting out `plan.ts:91-96` turns at least two tests red
+- [x] 3.3 `npm run lint` and `npm run build` pass
 
 #### Manual
 
-- [ ] 3.4 No assertion calls `weekdayForDayIndex` to compute its expectation
-- [ ] 3.5 Partial-coverage test comments its A4 rationale
+- [x] 3.4 No assertion calls `weekdayForDayIndex` to compute its expectation
+  > Verified by inspection 2026-09-07: four occurrences in `plan.test.ts` — the
+  > import, its own `describe` name, a comment, and `:18`, where it is the
+  > subject under test on the *actual* side against a literal `"mon"`. The
+  > weekday anchor table is written out by hand, so no expected value is
+  > derived from the code under test.
+- [x] 3.5 Partial-coverage test comments its A4 rationale
+  > Verified by inspection 2026-09-07: the "only one of the three declared
+  > available days" test carries a five-line comment naming research A4 and the
+  > regression it guards (a coverage rule added without a product decision).
 
 ### Phase 4: Duration caps
 
