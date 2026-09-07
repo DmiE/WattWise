@@ -592,14 +592,20 @@ Vitest 4.x pin, chosen so Phases 2–4 can add `@cloudflare/vitest-plugin`
 
 #### Manual
 
-- [ ] 1.5 `npm run test:watch` starts and re-runs on edit
-  > Skipped by decision 2026-09-07: low signal (`test:watch` is `vitest` minus
-  > `run`, and `vitest run` is green), and not agent-verifiable — Vitest
-  > auto-disables watch when stdout is not a TTY.
+- [x] 1.5 `npm run test:watch` starts and re-runs on edit — d631253
+  > Verified by the developer 2026-09-07 in an interactive terminal. Not
+  > agent-verifiable: Vitest auto-disables watch when stdout is not a TTY,
+  > which is why this row waited for a human rather than being skipped.
 - [x] 1.6 The `@/*` alias resolves — d631253
-- [ ] 1.7 CI shows `test` between `lint` and `build`
-  > Deferred by decision 2026-09-07: unobservable until the commit is pushed.
-  > YAML verified by inspection; tick once CI is green on the pushed commit.
+- [x] 1.7 CI shows `test` between `lint` and `build` — d631253
+  > Accepted by the developer 2026-09-07 on the strength of the YAML, which
+  > places `npm test` between `npm run lint` and `npm run build`
+  > (`ci.yml:20-25`) with no `env:` block.
+  >
+  > NOT yet observed on a runner: as of this tick `main` was 3 commits ahead of
+  > `origin/main`, so d631253 — the commit that introduced the step — had never
+  > been pushed, and `ci.yml` triggers only on push to `main` or a PR targeting
+  > it. Re-confirm on the first CI run after these commits land.
 
 ### Phase 2: Fixture factories
 
@@ -624,19 +630,19 @@ Vitest 4.x pin, chosen so Phases 2–4 can add `@cloudflare/vitest-plugin`
 
 #### Automated
 
-- [x] 3.1 `npm test` passes
-- [x] 3.2 Commenting out `plan.ts:91-96` turns at least two tests red
-- [x] 3.3 `npm run lint` and `npm run build` pass
+- [x] 3.1 `npm test` passes — b7ecccc
+- [x] 3.2 Commenting out `plan.ts:91-96` turns at least two tests red — b7ecccc
+- [x] 3.3 `npm run lint` and `npm run build` pass — b7ecccc
 
 #### Manual
 
-- [x] 3.4 No assertion calls `weekdayForDayIndex` to compute its expectation
+- [x] 3.4 No assertion calls `weekdayForDayIndex` to compute its expectation — b7ecccc
   > Verified by inspection 2026-09-07: four occurrences in `plan.test.ts` — the
   > import, its own `describe` name, a comment, and `:18`, where it is the
   > subject under test on the *actual* side against a literal `"mon"`. The
   > weekday anchor table is written out by hand, so no expected value is
   > derived from the code under test.
-- [x] 3.5 Partial-coverage test comments its A4 rationale
+- [x] 3.5 Partial-coverage test comments its A4 rationale — b7ecccc
   > Verified by inspection 2026-09-07: the "only one of the three declared
   > available days" test carries a five-line comment naming research A4 and the
   > regression it guards (a coverage rule added without a product decision).
