@@ -84,7 +84,7 @@ orchestrator updates Status as artifacts appear on disk.
 
 | # | Phase name | Goal (one line) | Risks covered | Test types | Status | Change folder |
 |---|---|---|---|---|---|---|
-| 1 | Runner bootstrap + trust-boundary units | Stand up a test runner on the workerd-targeted stack and prove the AI trust boundary and equipment mapping reject what they must | #1, #3, #6 | unit | implementing | `context/changes/testing-runner-bootstrap/` |
+| 1 | Runner bootstrap + trust-boundary units | Stand up a test runner on the workerd-targeted stack and prove the AI trust boundary and equipment mapping reject what they must | #1, #3, #6 | unit | implementing | `context/changes/testing-runner-bootstrap/` (#1, implemented); `context/changes/testing-equipment-mapping-parity/` (#3, #6) |
 | 2 | Gate and plan-lifecycle integration | Prove the access/renewal gate and the generation-persist lifecycle behave under failure, not only on the happy path | #2, #5 | integration | not started | — |
 | 3 | Cross-account isolation | Prove one cyclist cannot read or mutate another's data on any data-touching endpoint | #4 | integration | not started | — |
 | 4 | E2E critical flows + gate wiring | Cover the crossings cheaper layers cannot reach, and wire every gate in §5 including the build-output secret scan | #7, residual #1–#3 | e2e, gates | not started | — |
@@ -119,7 +119,9 @@ reject-don't-repair contract that makes them meaningful. **Risks #3 and #6 are
 not covered yet.** Both share this rollout phase but fell outside the research
 scope, and each needs its own research pass before any test asserts on it.
 Status is `implementing` for that reason, not because the shipped work is
-partial.
+partial. A second change, `testing-equipment-mapping-parity`, was opened
+2026-09-07 to close #3 and #6 on the infrastructure the first one built; this
+rollout phase reaches `complete` only when that change does.
 
 ## 4. Stack
 
