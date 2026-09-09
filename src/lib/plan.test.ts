@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   FIXTURE_SESSION_DURATION_MIN,
+  makeHrZoneTarget,
   makePlanPayload,
+  makeRpeTarget,
   makeSegment,
   makeSession,
+  makeWattsTarget,
   TARGET_FACTORY_BY_KIND,
 } from "@/lib/__fixtures__/plan-payload";
 import {
@@ -20,7 +23,7 @@ import {
   type PlanValidationIssue,
   type PlanValidationResult,
 } from "@/lib/plan";
-import type { PlanTargetKind } from "@/lib/plan-schema";
+import { planSchema, type PlanTargetKind } from "@/lib/plan-schema";
 import type { Profile } from "@/types";
 
 // Bootstrap assertion. Its job at this phase is to prove the runner resolves
@@ -444,4 +447,144 @@ describe("validateGeneratedPlan — equipment target-kind (accept half)", () => 
       expect(result).toEqual({ ok: true, plan: payload });
     },
   );
+});
+
+// --- Equipment target-kind exclusivity: the rejection half ---
+//
+// Same oracle as the accept half above
+// (`context/archive/2026-06-10-first-plan-generation/plan.md:129(a)`), asserted
+// in the direction that actually matters. "We render the right thing" and "we
+// never render the wrong thing" are two different claims, and a bug that added
+// watt targets *alongside* HR zones would keep every accept-half row green.
+// Absence is the assertion.
+//
+// All three equipment types are covered, not one representative. A single wrong
+// entry in `EQUIPMENT_TARGET_KIND` produces a *uniformly* wrong plan — every
+// segment agreeing with the same broken expectation — which a one-equipment
+// test passes without noticing.
+//
+// Exact equality on the code list, never `toContain`. `toContain` would still
+// pass if the payload also tripped the availability, cap, or sum guardrails,
+// and the row would then be proving that *something* is wrong rather than that
+// the equipment rule fired. Exact equality is what isolates the rule.
+//
+// Each row uses a **structurally valid target of the wrong kind** — see the
+// code-boundary test below for why that is not incidental.
+
+const EQUIPMENT_REJECT_CASES: {
+  equipment: string;
+  makeEquipmentProfile: () => Profile;
+  wrongKind: PlanTargetKind;
+}[] = [
+  { equipment: "power_meter", makeEquipmentProfile: makeProfile, wrongKind: "hr_zone" },
+  { equipment: "power_meter", makeEquipmentProfile: makeProfile, wrongKind: "rpe" },
+  { equipment: "hrm", makeEquipmentProfile: makeHrmProfile, wrongKind: "watts" },
+  { equipment: "hrm", makeEquipmentProfile: makeHrmProfile, wrongKind: "rpe" },
+  { equipment: "none", makeEquipmentProfile: makeNoneProfile, wrongKind: "watts" },
+  { equipment: "none", makeEquipmentProfile: makeNoneProfile, wrongKind: "hr_zone" },
+];
+
+/**
+ * A one-session, one-segment plan on day_index 1 (a Monday, declared available
+ * by every fixture profile) carrying the given target.
+ *
+ * One segment, so the expected issue list is exactly one entry long and the
+ * exact-equality assertion stays readable. Duration stays at the fixture
+ * default, which is inside the workday cap and equal to its single segment's
+ * duration, so no other guardrail can fire.
+ */
+function singleSegmentPayloadWithTarget(target: unknown): unknown {
+  return makePlanPayload({
+    sessions: [makeSession({ day_index: 1, segments: [makeSegment({ target })] })],
+  });
+}
+
+describe("validateGeneratedPlan — equipment target-kind (reject half)", () => {
+  it.each(EQUIPMENT_REJECT_CASES)(
+    "rejects a $equipment cyclist's plan whose segments carry $wrongKind targets",
+    ({ makeEquipmentProfile, wrongKind }) => {
+      const payload = singleSegmentPayloadWithTarget(TARGET_FACTORY_BY_KIND[wrongKind]());
+
+      const result = validateGeneratedPlan(payload, makeEquipmentProfile());
+
+      expect(rejectionCodes(result)).toEqual(["equipment_mismatch"]);
+    },
+  );
+
+  // The rule is per-segment, and that is the only version of it worth having.
+  // zod cannot catch this case at all — `plan-schema.ts` has no cross-segment
+  // constraint, so a session mixing kinds parses clean (see the B7 test below)
+  // — and a session-level check that stopped at "this session contains a wrong
+  // kind" would flag the whole ride, losing which block a cyclist should not
+  // trust. Exactly one issue for exactly one bad segment: the correct segment
+  // is not also flagged, and the bad one is not flagged twice.
+  it("flags only the mismatched segment when one session mixes a correct and a wrong kind", () => {
+    const payload = makePlanPayload({
+      sessions: [
+        makeSession({
+          day_index: 1,
+          segments: [
+            makeSegment({ label: "Warm-up", duration_min: 30, target: makeWattsTarget() }),
+            makeSegment({ label: "Main", duration_min: 30, target: makeRpeTarget() }),
+          ],
+        }),
+      ],
+    });
+
+    const result = validateGeneratedPlan(payload, makeProfile());
+
+    expect(rejectionCodes(result)).toEqual(["equipment_mismatch"]);
+  });
+
+  // The code boundary, and the reason every row above uses a well-formed target
+  // of the wrong kind. zod runs first and short-circuits (`plan.ts:67-76`), so a
+  // *structurally invalid* kind never reaches the equipment comparison and comes
+  // back as `schema`. A matrix written with `{ kind: "power" }` would be green
+  // for the wrong reason — passing while asserting a completely different rule.
+  // This is the same shape as the weekend-cap trap recorded in test-plan §6.1.
+  //
+  // Pinned so a refactor cannot quietly merge the two codes: the orchestrator
+  // retries on both today, but they mean different things — one is a malformed
+  // model response, the other a model that ignored the athlete's equipment.
+  it("returns a schema issue, not equipment_mismatch, for a structurally invalid target kind", () => {
+    const payload = singleSegmentPayloadWithTarget({ kind: "power", low_watts: 180, high_watts: 220 });
+
+    const result = validateGeneratedPlan(payload, makeProfile());
+
+    expect(rejectionCodes(result)).toEqual(["schema"]);
+  });
+});
+
+// Absence assertion — research B7. A **passing** `safeParse` is the asserted
+// outcome here, not an accident of a weak fixture.
+//
+// `targetSchema` (`plan-schema.ts:44-51`) carries exactly one refinement — the
+// low ≤ high range check — and there is no `superRefine` and no cross-segment
+// or cross-session constraint anywhere in the file. Exclusivity therefore exists
+// only *transitively*: every segment is compared to one kind derived from the
+// profile, and they agree with each other only because they all agree with it.
+// Nothing states "all segments share one kind" on its own.
+//
+// The consequence this pins: a single wrong entry in `EQUIPMENT_TARGET_KIND`
+// would produce a uniformly wrong plan that validates cleanly, which is why the
+// matrix above covers all three equipment types rather than one. Adding an
+// independent same-kind rule would turn this test red — deliberately, because
+// that is a product decision (B7) and not a refactor.
+describe("planSchema — mixed target kinds", () => {
+  it("parses a payload whose segments mix target kinds, with no profile in scope", () => {
+    const payload = makePlanPayload({
+      sessions: [
+        makeSession({
+          day_index: 1,
+          segments: [
+            makeSegment({ label: "Warm-up", duration_min: 20, target: makeWattsTarget() }),
+            makeSegment({ label: "Zone work", duration_min: 20, target: makeHrZoneTarget() }),
+            makeSegment({ label: "Cool-down", duration_min: 20, target: makeRpeTarget() }),
+          ],
+        }),
+      ],
+    });
+
+    expect(planSchema.safeParse(payload).success).toBe(true);
+  });
 });

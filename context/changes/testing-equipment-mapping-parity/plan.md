@@ -826,32 +826,32 @@ migration on, and zod already enforces both rules on every real write path.
 
 #### Automated
 
-- [x] 1.1 `npm test` passes and the 23 pre-existing `plan.test.ts` assertions are unchanged
-- [x] 1.2 The coherence guard passes for all three equipment types
-- [x] 1.3 `npm run lint` and `npm run build` pass
-- [x] 1.4 `npx tsc --noEmit` reports no errors in either fixture file
+- [x] 1.1 `npm test` passes and the 23 pre-existing `plan.test.ts` assertions are unchanged — 90d87f1
+- [x] 1.2 The coherence guard passes for all three equipment types — 90d87f1
+- [x] 1.3 `npm run lint` and `npm run build` pass — 90d87f1
+- [x] 1.4 `npx tsc --noEmit` reports no errors in either fixture file — 90d87f1
 
 #### Manual
 
-- [x] 1.5 Every field of the two new profile factories satisfies all nine `profiles` CHECK constraints
-- [x] 1.6 `makeProfile`'s defaults, signature, and docblock are byte-identical to before
-- [x] 1.7 Each new factory's docblock names the constraint forcing each companion field
+- [x] 1.5 Every field of the two new profile factories satisfies all nine `profiles` CHECK constraints — 90d87f1
+- [x] 1.6 `makeProfile`'s defaults, signature, and docblock are byte-identical to before — 90d87f1
+- [x] 1.7 Each new factory's docblock names the constraint forcing each companion field — 90d87f1
 
 ### Phase 2: Target-kind exclusivity
 
 #### Automated
 
-- [ ] 2.1 `npm test` passes
-- [ ] 2.2 Changing `EQUIPMENT_TARGET_KIND`'s `hrm` entry to `"watts"` turns the two hrm matrix rows and the hrm coherence-guard row red
-- [ ] 2.3 Inverting the comparison at `plan.ts:118` turns all six matrix rows red
-- [ ] 2.4 Deleting the segment loop at `plan.ts:116-125` turns all six matrix rows red
-- [ ] 2.5 `npm run lint` and `npm run build` pass
+- [x] 2.1 `npm test` passes
+- [x] 2.2 Changing `EQUIPMENT_TARGET_KIND`'s `hrm` entry to `"watts"` turns the two hrm matrix rows and the hrm coherence-guard row red (2 red, not 3: the hrm coherence-guard row and the hrm×watts reject row. The hrm×rpe row cannot go red — `rpe` is still ≠ the mutated required kind, so it still rejects. The regression is caught in both directions.)
+- [x] 2.3 Inverting the comparison at `plan.ts:118` turns all six matrix rows red
+- [x] 2.4 Deleting the segment loop at `plan.ts:116-125` turns all six matrix rows red
+- [x] 2.5 `npm run lint` and `npm run build` pass
 
 #### Manual
 
-- [ ] 2.6 Every rejection assertion uses exact-equality on the code list, never `toContain`
-- [ ] 2.7 No wrong-kind target in the matrix is structurally invalid
-- [ ] 2.8 The B7 absence test comments that a passing `safeParse` is the asserted outcome
+- [x] 2.6 Every rejection assertion uses exact-equality on the code list, never `toContain`
+- [x] 2.7 No wrong-kind target in the matrix is structurally invalid
+- [x] 2.8 The B7 absence test comments that a passing `safeParse` is the asserted outcome
 
 ### Phase 3: Legend and target-kind agreement
 
