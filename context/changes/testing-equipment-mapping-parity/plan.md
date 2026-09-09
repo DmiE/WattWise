@@ -891,19 +891,19 @@ migration on, and zod already enforces both rules on every real write path.
 
 #### Automated
 
-- [ ] 5.1 `npm test` passes
-- [ ] 5.2 Nulling `fitness_level` handling in the measured branch turns the `fitness_level_matches_ftp_source` row red
-- [ ] 5.3 Changing `max_hr` to `null` in the `hrm` branch turns the `hrm_requires_max_hr` row red
-- [ ] 5.4 Changing `ftp_source` to `null` in the estimated branch turns the `power_meter_requires_ftp` row red
-- [ ] 5.5 Removing `update.fitness_level = null` turns the renewal CHECK test red
-- [ ] 5.6 `npm run lint` and `npm run build` pass
+- [x] 5.1 `npm test` passes
+- [x] 5.2 Nulling `fitness_level` handling in the measured branch turns the `fitness_level_matches_ftp_source` row red
+- [x] 5.3 Changing `max_hr` to `null` in the `hrm` branch turns the `hrm_requires_max_hr` row red
+- [x] 5.4 Changing `ftp_source` to `null` in the estimated branch turns the `power_meter_requires_ftp` row red
+- [x] 5.5 Removing `update.fitness_level = null` turns the renewal CHECK test red
+- [x] 5.6 `npm run lint` and `npm run build` pass
 
 #### Manual
 
-- [ ] 5.7 Each predicate quotes its CHECK's SQL and is verified against the migration
-- [ ] 5.8 No predicate is imported from `onboarding.ts` or `renewal.ts`
-- [ ] 5.9 The `IS NOT DISTINCT FROM` null semantics are handled correctly
-- [ ] 5.10 No test asserts the unreachable lower FTP clamp
+- [x] 5.7 Each predicate quotes its CHECK's SQL and is verified against the migration
+- [x] 5.8 No predicate is imported from `onboarding.ts` or `renewal.ts`
+- [x] 5.9 The `IS NOT DISTINCT FROM` null semantics are handled correctly
+- [x] 5.10 No test asserts the unreachable lower FTP clamp
 
 ### Phase 6: Cookbook and deferred-gap recording
 
