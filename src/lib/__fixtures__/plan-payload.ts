@@ -1,3 +1,5 @@
+import type { PlanTargetKind } from "@/lib/plan-schema";
+
 // Test fixtures: raw generated-plan payloads for `validateGeneratedPlan`.
 //
 // Every factory here returns `unknown`, mirroring how the validator actually
@@ -37,9 +39,46 @@ export interface PlanPayloadOverrides {
 export const FIXTURE_SESSION_DURATION_MIN = 60;
 
 /** A watts target inside `plan-schema.ts`'s bounds, plausible for the fixture profile's 250 W FTP. */
-function makeWattsTarget(): unknown {
+export function makeWattsTarget(): unknown {
   return { kind: "watts", low_watts: 180, high_watts: 220 };
 }
+
+/**
+ * An `hr_zone` target inside `hrZoneTarget`'s bounds (`plan-schema.ts:28-32`),
+ * plausible for the `hrm` fixture profile: both bpm bounds sit below
+ * `FIXTURE_MAX_HR` (185), so the range is one an athlete with that max HR could
+ * actually ride rather than merely one the schema accepts.
+ */
+export function makeHrZoneTarget(): unknown {
+  return { kind: "hr_zone", zone: 2, low_bpm: 130, high_bpm: 150 };
+}
+
+/**
+ * An `rpe` target inside `rpeTarget`'s bounds (`plan-schema.ts:34-38`).
+ *
+ * `description` is required and non-empty for this kind — it is the only target
+ * variant that carries one, which is why an `rpe` target cannot be produced by
+ * tweaking a watts one.
+ */
+export function makeRpeTarget(): unknown {
+  return { kind: "rpe", rpe: 4, description: "Conversational effort." };
+}
+
+/**
+ * Every target kind, keyed by kind, so the exclusivity matrix can be a
+ * parameterised table instead of nine near-identical literals.
+ *
+ * Typed as a `Record` over `PlanTargetKind` so a fourth target kind added to
+ * `plan-schema.ts` fails the build here rather than silently leaving a gap in
+ * the matrix. The type is imported **type-only**: the factories still return
+ * `unknown`, which is what keeps tests exercising the untrusted-input path
+ * described at the top of this file.
+ */
+export const TARGET_FACTORY_BY_KIND: Record<PlanTargetKind, () => unknown> = {
+  watts: makeWattsTarget,
+  hr_zone: makeHrZoneTarget,
+  rpe: makeRpeTarget,
+};
 
 /** Build one segment. Defaults to a single watts block covering the whole session. */
 export function makeSegment(overrides: SegmentOverrides = {}): unknown {

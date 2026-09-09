@@ -826,16 +826,16 @@ migration on, and zod already enforces both rules on every real write path.
 
 #### Automated
 
-- [ ] 1.1 `npm test` passes and the 23 pre-existing `plan.test.ts` assertions are unchanged
-- [ ] 1.2 The coherence guard passes for all three equipment types
-- [ ] 1.3 `npm run lint` and `npm run build` pass
-- [ ] 1.4 `npx tsc --noEmit` reports no errors in either fixture file
+- [x] 1.1 `npm test` passes and the 23 pre-existing `plan.test.ts` assertions are unchanged
+- [x] 1.2 The coherence guard passes for all three equipment types
+- [x] 1.3 `npm run lint` and `npm run build` pass
+- [x] 1.4 `npx tsc --noEmit` reports no errors in either fixture file
 
 #### Manual
 
-- [ ] 1.5 Every field of the two new profile factories satisfies all nine `profiles` CHECK constraints
-- [ ] 1.6 `makeProfile`'s defaults, signature, and docblock are byte-identical to before
-- [ ] 1.7 Each new factory's docblock names the constraint forcing each companion field
+- [x] 1.5 Every field of the two new profile factories satisfies all nine `profiles` CHECK constraints
+- [x] 1.6 `makeProfile`'s defaults, signature, and docblock are byte-identical to before
+- [x] 1.7 Each new factory's docblock names the constraint forcing each companion field
 
 ### Phase 2: Target-kind exclusivity
 

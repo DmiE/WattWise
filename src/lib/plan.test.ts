@@ -5,14 +5,23 @@ import {
   makePlanPayload,
   makeSegment,
   makeSession,
+  TARGET_FACTORY_BY_KIND,
 } from "@/lib/__fixtures__/plan-payload";
-import { FIXTURE_WEEKEND_CAP_MIN, FIXTURE_WORKDAY_CAP_MIN, makeProfile } from "@/lib/__fixtures__/profile";
+import {
+  FIXTURE_WEEKEND_CAP_MIN,
+  FIXTURE_WORKDAY_CAP_MIN,
+  makeHrmProfile,
+  makeNoneProfile,
+  makeProfile,
+} from "@/lib/__fixtures__/profile";
 import {
   validateGeneratedPlan,
   weekdayForDayIndex,
   type PlanValidationIssue,
   type PlanValidationResult,
 } from "@/lib/plan";
+import type { PlanTargetKind } from "@/lib/plan-schema";
+import type { Profile } from "@/types";
 
 // Bootstrap assertion. Its job at this phase is to prove the runner resolves
 // the `@/*` alias and imports a real project module. The claim itself is
@@ -370,4 +379,69 @@ describe("validateGeneratedPlan — malformed input", () => {
     expect(rejectionCodes(result)).toEqual(["schema"]);
     expect(result).not.toHaveProperty("plan");
   });
+});
+
+// --- Equipment target-kind exclusivity ---
+//
+// Oracle: the mapping is spelled out in the archived generation plan's
+// validator contract — "every segment's `target.kind` equals the kind required
+// by `equipment_type` (`power_meter`→`watts`, `hrm`→`hr_zone`, `none`→`rpe`)"
+// (`context/archive/2026-06-10-first-plan-generation/plan.md:129(a)`) — and the
+// response to a violation is stated as a decision, not an accident: "Hard
+// reject + retry on mismatch (no coercion) … coercion = silently wrong numbers"
+// (`plan-brief.md:30`). The stake is the PRD's §Success Criteria guardrail:
+// incorrect values destroy trust.
+//
+// The three kind literals below are written out by hand from that line.
+// `EQUIPMENT_TARGET_KIND` (`plan.ts:23-27`) is module-private, so it cannot be
+// imported — but it must not be re-derived either, because a test that computed
+// its expectation from the mapping under test would keep passing if a single
+// entry were wrong.
+//
+// This block asserts the **accept** half: each equipment type validates against
+// the one kind it requires. It is also the fixture guard for the two new
+// equipment variants — when it fails, the fixtures drifted, not the validator.
+// The rejection half (each type against the two kinds it must never accept) is
+// asserted separately, so no claim is duplicated across the two.
+
+const EQUIPMENT_ACCEPT_CASES: {
+  equipment: string;
+  makeEquipmentProfile: () => Profile;
+  requiredKind: PlanTargetKind;
+}[] = [
+  { equipment: "power_meter", makeEquipmentProfile: makeProfile, requiredKind: "watts" },
+  { equipment: "hrm", makeEquipmentProfile: makeHrmProfile, requiredKind: "hr_zone" },
+  { equipment: "none", makeEquipmentProfile: makeNoneProfile, requiredKind: "rpe" },
+];
+
+/**
+ * A three-session plan on the fixture profiles' available days (mon/wed/fri),
+ * every segment carrying the given target kind.
+ *
+ * Only the target kind varies. Durations stay at the fixture default, which is
+ * inside the workday cap and equal to its single segment's duration, so a
+ * failure here can only be about the equipment rule.
+ */
+function payloadWithTargetKind(kind: PlanTargetKind): unknown {
+  return makePlanPayload({
+    sessions: [1, 3, 5].map((day_index) =>
+      makeSession({
+        day_index,
+        segments: [makeSegment({ target: TARGET_FACTORY_BY_KIND[kind]() })],
+      }),
+    ),
+  });
+}
+
+describe("validateGeneratedPlan — equipment target-kind (accept half)", () => {
+  it.each(EQUIPMENT_ACCEPT_CASES)(
+    "accepts a $equipment cyclist's plan whose segments carry $requiredKind targets",
+    ({ makeEquipmentProfile, requiredKind }) => {
+      const payload = payloadWithTargetKind(requiredKind);
+
+      const result = validateGeneratedPlan(payload, makeEquipmentProfile());
+
+      expect(result).toEqual({ ok: true, plan: payload });
+    },
+  );
 });

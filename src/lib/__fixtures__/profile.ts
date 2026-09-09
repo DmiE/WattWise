@@ -1,4 +1,4 @@
-import type { Profile } from "@/types";
+import type { FitnessLevel, Profile } from "@/types";
 
 // Test fixture: a coherent `profiles` row built from partial overrides.
 //
@@ -54,4 +54,94 @@ export function makeProfile(overrides: Partial<Profile> = {}): Profile {
     updated_at: "2026-01-05T00:00:00.000Z",
     ...overrides,
   };
+}
+
+// --- Equipment variants ---
+//
+// `makeProfile` deliberately does not derive companion fields from
+// `equipment_type` (see its docblock): overriding equipment alone leaves
+// `ftp_watts: 250` and `ftp_source: "measured"` in place, producing a row that
+// violates `fitness_level_matches_ftp_source` and therefore could not exist in
+// the database. A test asserting against such a row proves nothing about real
+// behaviour, so the two non-power-meter branches get their own factories rather
+// than being spelled out at each call site.
+//
+// These are additions, not a change of behaviour: `makeProfile`'s defaults,
+// signature, and docblock are untouched, so the assertions that depend on
+// today's power-meter defaults are unaffected.
+
+/**
+ * Default maximum heart rate for the `hrm` variant.
+ *
+ * Inside `profiles_max_hr_range`, which allows 100–230 (migration `:53`).
+ * `hr_zone` fixture targets are built below this value so an HRM fixture pairs
+ * with a physiologically plausible target range rather than merely a
+ * schema-legal one.
+ */
+export const FIXTURE_MAX_HR = 185;
+
+/**
+ * Default fitness level for both non-power-meter variants.
+ *
+ * Forced to be non-null by `fitness_level_matches_ftp_source` (migration
+ * `:66-69`): with `ftp_source` null, the SQL's `is not distinct from 'measured'`
+ * branch is false, so the row can only satisfy the constraint through the second
+ * branch — which requires `fitness_level is not null`.
+ */
+export const FIXTURE_FITNESS_LEVEL: FitnessLevel = "intermediate";
+
+/**
+ * Build a DB-coherent `hrm` `Profile`.
+ *
+ * Three companion fields are not stylistic choices — each is forced by a CHECK
+ * constraint once `equipment_type` is `"hrm"`:
+ *
+ * - `ftp_watts: null` / `ftp_source: null` — an HRM athlete has no FTP.
+ *   `power_meter_requires_ftp` (migration `:60-62`) does not demand them here
+ *   (its guard is `equipment_type <> 'power_meter'`), and leaving
+ *   `makeProfile`'s `"measured"` in place would instead break
+ *   `fitness_level_matches_ftp_source`.
+ * - `fitness_level: FIXTURE_FITNESS_LEVEL` — required non-null by
+ *   `fitness_level_matches_ftp_source` (migration `:66-69`) once `ftp_source`
+ *   is null.
+ * - `max_hr: FIXTURE_MAX_HR` — required non-null by `hrm_requires_max_hr`
+ *   (migration `:63-65`), which is the one constraint that fires *only* for
+ *   this equipment type.
+ */
+export function makeHrmProfile(overrides: Partial<Profile> = {}): Profile {
+  return makeProfile({
+    equipment_type: "hrm",
+    ftp_watts: null,
+    ftp_source: null,
+    fitness_level: FIXTURE_FITNESS_LEVEL,
+    max_hr: FIXTURE_MAX_HR,
+    ...overrides,
+  });
+}
+
+/**
+ * Build a DB-coherent `none` (no-equipment) `Profile`.
+ *
+ * Same companion fields as the `hrm` variant minus the heart-rate monitor:
+ *
+ * - `ftp_watts: null` / `ftp_source: null` — no power meter, so no FTP;
+ *   `power_meter_requires_ftp` (migration `:60-62`) is satisfied by the
+ *   equipment guard.
+ * - `fitness_level: FIXTURE_FITNESS_LEVEL` — required non-null by
+ *   `fitness_level_matches_ftp_source` (migration `:66-69`) once `ftp_source`
+ *   is null.
+ * - `max_hr: null` — this athlete has no HRM. `hrm_requires_max_hr` (migration
+ *   `:63-65`) does not apply, and `profiles_max_hr_range` (`:53`) is satisfied
+ *   by its own `max_hr is null` disjunct. It is set explicitly rather than
+ *   inherited so the row reads as a deliberate no-equipment profile.
+ */
+export function makeNoneProfile(overrides: Partial<Profile> = {}): Profile {
+  return makeProfile({
+    equipment_type: "none",
+    ftp_watts: null,
+    ftp_source: null,
+    fitness_level: FIXTURE_FITNESS_LEVEL,
+    max_hr: null,
+    ...overrides,
+  });
 }
