@@ -853,6 +853,10 @@ migration on, and zod already enforces both rules on every real write path.
 - [x] 2.7 No wrong-kind target in the matrix is structurally invalid — 63ea53e
 - [x] 2.8 The B7 absence test comments that a passing `safeParse` is the asserted outcome — 63ea53e
 
+### Phase 3: Legend and target-kind agreement
+
+#### Automated
+
 - [x] 3.1 `npm test` passes — 7c72932
 - [x] 3.2 Swapping the `power_meter` and `hrm` entries of `INTENSITY_REFERENCE` turns at least two rows red — 7c72932
 - [x] 3.3 Deleting one zone row from the `hrm` table turns the row-correspondence test red — 7c72932
@@ -869,19 +873,19 @@ migration on, and zod already enforces both rules on every real write path.
 
 #### Automated
 
-- [x] 4.1 `npm test` passes
-- [x] 4.2 Relaxing any single bound in `onboarding-schema.ts` by one step turns exactly that row red
-- [x] 4.3 Deleting the uniqueness `.refine` turns the duplicate-days test red
-- [x] 4.4 Deleting `.min(1)` on `available_days` turns the empty-array test red
-- [x] 4.5 Deleting `.int()` from `age` turns the fractional-age test red
-- [x] 4.6 `npm run lint` and `npm run build` pass
+- [x] 4.1 `npm test` passes — 71758ab
+- [x] 4.2 Relaxing any single bound in `onboarding-schema.ts` by one step turns exactly that row red — 71758ab
+- [x] 4.3 Deleting the uniqueness `.refine` turns the duplicate-days test red — 71758ab
+- [x] 4.4 Deleting `.min(1)` on `available_days` turns the empty-array test red — 71758ab
+- [x] 4.5 Deleting `.int()` from `age` turns the fractional-age test red — 71758ab
+- [x] 4.6 `npm run lint` and `npm run build` pass — 71758ab
 
 #### Manual
 
-- [x] 4.7 Every bound is verified against `init_mvp_schema.sql:50-59` and cites its line
-- [x] 4.8 No value is imported, computed, or derived from `onboarding-schema.ts`
-- [x] 4.9 The `weight_kg` probes are `200.004` / `29.996` / `70.123456`
-- [x] 4.10 The `available_days` cases state this is sole-enforcement, not parity, and name B1/B2
+- [x] 4.7 Every bound is verified against `init_mvp_schema.sql:50-59` and cites its line — 71758ab
+- [x] 4.8 No value is imported, computed, or derived from `onboarding-schema.ts` — 71758ab
+- [x] 4.9 The `weight_kg` probes are `200.004` / `29.996` / `70.123456` — 71758ab
+- [x] 4.10 The `available_days` cases state this is sole-enforcement, not parity, and name B1/B2 — 71758ab
 
 ### Phase 5: Cross-field CHECK truth tables
 
