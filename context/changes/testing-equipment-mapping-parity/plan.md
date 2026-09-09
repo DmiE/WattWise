@@ -841,33 +841,29 @@ migration on, and zod already enforces both rules on every real write path.
 
 #### Automated
 
-- [x] 2.1 `npm test` passes
-- [x] 2.2 Changing `EQUIPMENT_TARGET_KIND`'s `hrm` entry to `"watts"` turns the two hrm matrix rows and the hrm coherence-guard row red (2 red, not 3: the hrm coherence-guard row and the hrm×watts reject row. The hrm×rpe row cannot go red — `rpe` is still ≠ the mutated required kind, so it still rejects. The regression is caught in both directions.)
-- [x] 2.3 Inverting the comparison at `plan.ts:118` turns all six matrix rows red
-- [x] 2.4 Deleting the segment loop at `plan.ts:116-125` turns all six matrix rows red
-- [x] 2.5 `npm run lint` and `npm run build` pass
+- [x] 2.1 `npm test` passes — 63ea53e
+- [x] 2.2 Changing `EQUIPMENT_TARGET_KIND`'s `hrm` entry to `"watts"` turns the two hrm matrix rows and the hrm coherence-guard row red (2 red, not 3: the hrm coherence-guard row and the hrm×watts reject row. The hrm×rpe row cannot go red — `rpe` is still ≠ the mutated required kind, so it still rejects. The regression is caught in both directions.) — 63ea53e
+- [x] 2.3 Inverting the comparison at `plan.ts:118` turns all six matrix rows red — 63ea53e
+- [x] 2.4 Deleting the segment loop at `plan.ts:116-125` turns all six matrix rows red — 63ea53e
+- [x] 2.5 `npm run lint` and `npm run build` pass — 63ea53e
 
 #### Manual
 
-- [x] 2.6 Every rejection assertion uses exact-equality on the code list, never `toContain`
-- [x] 2.7 No wrong-kind target in the matrix is structurally invalid
-- [x] 2.8 The B7 absence test comments that a passing `safeParse` is the asserted outcome
+- [x] 2.6 Every rejection assertion uses exact-equality on the code list, never `toContain` — 63ea53e
+- [x] 2.7 No wrong-kind target in the matrix is structurally invalid — 63ea53e
+- [x] 2.8 The B7 absence test comments that a passing `safeParse` is the asserted outcome — 63ea53e
 
-### Phase 3: Legend and target-kind agreement
-
-#### Automated
-
-- [ ] 3.1 `npm test` passes
-- [ ] 3.2 Swapping the `power_meter` and `hrm` entries of `INTENSITY_REFERENCE` turns at least two rows red
-- [ ] 3.3 Deleting one zone row from the `hrm` table turns the row-correspondence test red
-- [ ] 3.4 Adding a fourth key to `INTENSITY_REFERENCE` turns the exhaustiveness test red
-- [ ] 3.5 `npm run lint` and `npm run build` pass
+- [x] 3.1 `npm test` passes
+- [x] 3.2 Swapping the `power_meter` and `hrm` entries of `INTENSITY_REFERENCE` turns at least two rows red
+- [x] 3.3 Deleting one zone row from the `hrm` table turns the row-correspondence test red
+- [x] 3.4 Adding a fourth key to `INTENSITY_REFERENCE` turns the exhaustiveness test red
+- [x] 3.5 `npm run lint` and `npm run build` pass
 
 #### Manual
 
-- [ ] 3.6 The caption substrings genuinely distinguish `power_meter` from `hrm`
-- [ ] 3.7 No assertion references a zone percentage — only row counts, kinds, and captions
-- [ ] 3.8 The target-kind literals match Phase 2's and cite the same oracle line
+- [x] 3.6 The caption substrings genuinely distinguish `power_meter` from `hrm`
+- [x] 3.7 No assertion references a zone percentage — only row counts, kinds, and captions
+- [x] 3.8 The target-kind literals match Phase 2's and cite the same oracle line
 
 ### Phase 4: zod↔DB bounds parity
 
