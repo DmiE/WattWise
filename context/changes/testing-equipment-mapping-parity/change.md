@@ -3,7 +3,7 @@ change_id: testing-equipment-mapping-parity
 title: Equipment target-kind exclusivity and zod↔DB parity units
 status: implemented
 created: 2026-09-07
-updated: 2026-09-09
+updated: 2026-09-10
 archived_at: null
 ---
 

@@ -909,14 +909,14 @@ migration on, and zod already enforces both rules on every real write path.
 
 #### Automated
 
-- [x] 6.1 `npm test`, `npm run lint`, `npm run build` all pass
-- [x] 6.2 §6.2 contains no "TBD"
-- [x] 6.3 The §3 Phase 1 row no longer reads `implementing`
-- [x] 6.4 Every B-series id B1–B8 appears at least once in `context/foundation/test-plan.md`
+- [x] 6.1 `npm test`, `npm run lint`, `npm run build` all pass — 8ed5113
+- [x] 6.2 §6.2 contains no "TBD" — 8ed5113
+- [x] 6.3 The §3 Phase 1 row no longer reads `implementing` — 8ed5113
+- [x] 6.4 Every B-series id B1–B8 appears at least once in `context/foundation/test-plan.md` — 8ed5113
 
 #### Manual
 
-- [x] 6.5 Each §7 entry names a blocking question and a re-evaluation trigger
-- [x] 6.6 §6.2 carries the valid-wrong-kind trap and the never-import-the-bound rule
-- [x] 6.7 The B3 entry states the security consequence and §3 Phase 2 references it
-- [x] 6.8 The §3 Phase 1 scope note reads as an accurate account to someone who wasn't here
+- [x] 6.5 Each §7 entry names a blocking question and a re-evaluation trigger — 8ed5113
+- [x] 6.6 §6.2 carries the valid-wrong-kind trap and the never-import-the-bound rule — 8ed5113
+- [x] 6.7 The B3 entry states the security consequence and §3 Phase 2 references it — 8ed5113
+- [x] 6.8 The §3 Phase 1 scope note reads as an accurate account to someone who wasn't here — 8ed5113
