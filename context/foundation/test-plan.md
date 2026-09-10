@@ -6,7 +6,7 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-09-09
+> Last updated: 2026-09-10
 
 ## 1. Strategy
 
@@ -85,7 +85,7 @@ orchestrator updates Status as artifacts appear on disk.
 | # | Phase name | Goal (one line) | Risks covered | Test types | Status | Change folder |
 |---|---|---|---|---|---|---|
 | 1 | Runner bootstrap + trust-boundary units | Stand up a test runner on the workerd-targeted stack and prove the AI trust boundary and equipment mapping reject what they must | #1, #3, #6 | unit | complete | `context/changes/testing-runner-bootstrap/` (#1, implemented); `context/changes/testing-equipment-mapping-parity/` (#3, #6, implemented) |
-| 2 | Gate and plan-lifecycle integration | Prove the access/renewal gate and the generation-persist lifecycle behave under failure, not only on the happy path | #2, #5; plus two endpoint-level residues handed over by Phase 1 — the unguarded `POST /api/onboarding` re-POST (**B3**, a Risk #3 write-path face) and Risk #6's "actionable 400, not an opaque 500" clause. See §7. | integration | not started | — |
+| 2 | Gate and plan-lifecycle integration | Prove the access/renewal gate and the generation-persist lifecycle behave under failure, not only on the happy path | #2, #5; plus two endpoint-level residues handed over by Phase 1 — the regression test for the `POST /api/onboarding` re-POST guard, shipped 2026-09-10 (**B3**, a Risk #3 write-path face) and Risk #6's "actionable 400, not an opaque 500" clause. See §7. | integration | not started | — |
 | 3 | Cross-account isolation | Prove one cyclist cannot read or mutate another's data on any data-touching endpoint | #4 | integration | not started | — |
 | 4 | E2E critical flows + gate wiring | Cover the crossings cheaper layers cannot reach, and wire every gate in §5 including the build-output secret scan | #7, residual #1–#3 | e2e, gates | not started | — |
 | 5 | AI-native plan-quality review (conditional) | Judge whether a generated plan is a coherent block for the stated goal — the part of #1 with no deterministic oracle; skip if Phase 1 closes #1 | residual #1 | AI-native review | not started | — |
@@ -563,33 +563,27 @@ trigger that should bring it back.
   return a 400 instead?). Re-evaluate when B5 is answered.
 - **`max_hr` has no update path outside re-onboarding** — an HRM cyclist whose
   maximum heart rate changes cannot update it except by re-running onboarding,
-  which is itself the unguarded endpoint below. Recorded against **B6**
+  which since 2026-09-10 refuses a second POST (B3, below). Recorded against **B6**
   (intended?). No test, because there is no behaviour to pin — the gap is a
   missing path, not a wrong one. Re-evaluate if a profile-edit field is added.
-- **Unguarded `POST /api/onboarding` re-POST (B3)** — the only finding in this
-  set with a security dimension, and the one most likely to be lost, so it is
-  recorded with its consequence rather than only its cause. The endpoint
-  (`src/pages/api/onboarding.ts:16-49`) has **one** guard — authenticated or
-  401 — and **no already-onboarded check**; it upserts unconditionally. The
-  middleware does not compensate: its keep-out-of-onboarding redirect keys on
-  `pathname.startsWith("/onboarding")` (`middleware.ts:28`), and
-  `/api/onboarding` starts with `/api`, so it is never matched. The consequence
-  is not merely a duplicate write. An already-onboarded cyclist can rewrite
-  **every field `profileEditSchema` deliberately withholds** — the restriction
-  that schema exists to document is enforced nowhere on this path — and
-  changing `equipment_type` while a plan is active desyncs the live plan from
-  the frozen `equipment_at_generation` snapshot the legend is read from. That
-  is **Risk #3 as literally worded** (a cyclist sees intensity targets that do
-  not match their declared equipment), reached through the write path instead of
-  the render path. Blocked on **B3** as a security/product call: is the re-POST
-  intended? It also determines the order of work — a regression test now, or a
-  fix first. Owned by **§3 Phase 2** (see its Risks-covered cell), which is the
-  first phase with the endpoint tooling to assert it. Re-evaluate **before** that
-  phase rather than during it — unlike every other entry here, this one is a live
-  gap in shipped behaviour rather than a missing test, so if B3 comes back "not
-  intended" it becomes a fix with a regression test, not a test pinning current
-  behaviour. Re-evaluate sooner if any profile field becomes writable through a
-  new endpoint, which widens the same hole.
+- **Regression test for the onboarding re-POST guard (B3)** — the guard itself
+  landed 2026-09-10 (`src/pages/api/onboarding.ts`): an already-onboarded POST
+  now returns **409** before the body is parsed, and a profile that cannot be
+  read returns 500 rather than allowing the overwrite. The defect it closed was
+  Risk #3 reached through the write path — an already-onboarded cyclist could
+  rewrite `equipment_type` and desync the live plan from the frozen
+  `equipment_at_generation` snapshot the legend renders from. What remains
+  negative space is the **test**: it needs a request, a session, and a Supabase
+  client, and §4 records API mocking as "none yet — see §3 Phase 2", so writing
+  it before that phase would pre-empt its mocking-policy decision. Owned by
+  **§3 Phase 2** (see its Risks-covered cell). Assertions it must carry: an
+  onboarded user's POST returns 409 and the stored `equipment_type` is
+  unchanged; a first-time POST still returns 200; and a failed profile read
+  returns 500 rather than writing — that last one is the hermetic-stub case,
+  since real infra will not trigger it. Full finding and decision trail:
+  `context/changes/onboarding-repost-guard/change.md`. Re-evaluate if any
+  profile field becomes writable through a new endpoint, which widens the same
+  hole.
 
 ### 7.1 Note on §3 Phase 5 (AI-native plan-quality review)
 
