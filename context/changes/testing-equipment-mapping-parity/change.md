@@ -1,7 +1,7 @@
 ---
 change_id: testing-equipment-mapping-parity
 title: Equipment target-kind exclusivity and zod↔DB parity units
-status: implementing
+status: implemented
 created: 2026-09-07
 updated: 2026-09-09
 archived_at: null
@@ -50,3 +50,38 @@ which needs all three equipment types.
 `testing-runner-bootstrap`'s research scope, so no oracle has been established
 for either. Per the lesson chain, research produces the oracle from sources
 before any test asserts on them.
+
+## Outcome (2026-09-09)
+
+Implemented across six phases. **Rollout §3 Phase 1 is now `complete`** — this
+was the change it was waiting on.
+
+Risks #3 and #6 are both covered by unit tests, and no production code changed:
+every defect research surfaced is recorded in test-plan §7 with the question
+that blocks it, and where current behaviour is a known divergence a test pins
+it so the eventual fix meets a red test. The suite stands at 120 assertions
+across `plan.test.ts`, `intensity-reference.test.ts`,
+`onboarding-schema.test.ts`, `onboarding.test.ts`, `renewal.test.ts`, and the
+fixture coherence guard. Test-plan §6.2 carries the patterns this change
+established (equipment-variant factories, both-directions exclusivity with
+exact-equality issue codes, the valid-wrong-kind requirement, legend agreement
+via one shared literal, migration-traced parity bounds, and predicate
+transcription for cross-field CHECKs).
+
+**Open questions carried forward**, all recorded in test-plan §7:
+
+- **B1/B2** — `available_days`: the dead `array_length` CHECK and the absent
+  day-uniqueness constraint. Tests assert zod as sole enforcer.
+- **B3** — the unguarded `POST /api/onboarding` re-POST. The only finding with
+  a security dimension; routed to §3 Phase 2, which owns the endpoint layer.
+- **B4** — `weight_kg` `numeric(5,2)` rounding before the CHECK; pinned, not
+  fixed, with the `km_ridden` precedent cited.
+- **B5** — renewal's silent discard of `ftp_watts` from non-power-meter users.
+- **B6** — `max_hr` has no update path outside re-onboarding.
+- **B7** — whether `plan-schema.ts` should enforce one target kind per plan
+  independently of the profile.
+- **B8** — read-path revalidation of `plan_sessions.structure` (the archive's
+  F6, now deferred a second time).
+
+The A-series (A1–A9, from `testing-runner-bootstrap`) remains open and was not
+re-litigated.

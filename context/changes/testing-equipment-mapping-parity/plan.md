@@ -891,32 +891,32 @@ migration on, and zod already enforces both rules on every real write path.
 
 #### Automated
 
-- [x] 5.1 `npm test` passes
-- [x] 5.2 Nulling `fitness_level` handling in the measured branch turns the `fitness_level_matches_ftp_source` row red
-- [x] 5.3 Changing `max_hr` to `null` in the `hrm` branch turns the `hrm_requires_max_hr` row red
-- [x] 5.4 Changing `ftp_source` to `null` in the estimated branch turns the `power_meter_requires_ftp` row red
-- [x] 5.5 Removing `update.fitness_level = null` turns the renewal CHECK test red
-- [x] 5.6 `npm run lint` and `npm run build` pass
+- [x] 5.1 `npm test` passes — c482732
+- [x] 5.2 Nulling `fitness_level` handling in the measured branch turns the `fitness_level_matches_ftp_source` row red — c482732
+- [x] 5.3 Changing `max_hr` to `null` in the `hrm` branch turns the `hrm_requires_max_hr` row red — c482732
+- [x] 5.4 Changing `ftp_source` to `null` in the estimated branch turns the `power_meter_requires_ftp` row red — c482732
+- [x] 5.5 Removing `update.fitness_level = null` turns the renewal CHECK test red — c482732
+- [x] 5.6 `npm run lint` and `npm run build` pass — c482732
 
 #### Manual
 
-- [x] 5.7 Each predicate quotes its CHECK's SQL and is verified against the migration
-- [x] 5.8 No predicate is imported from `onboarding.ts` or `renewal.ts`
-- [x] 5.9 The `IS NOT DISTINCT FROM` null semantics are handled correctly
-- [x] 5.10 No test asserts the unreachable lower FTP clamp
+- [x] 5.7 Each predicate quotes its CHECK's SQL and is verified against the migration — c482732
+- [x] 5.8 No predicate is imported from `onboarding.ts` or `renewal.ts` — c482732
+- [x] 5.9 The `IS NOT DISTINCT FROM` null semantics are handled correctly — c482732
+- [x] 5.10 No test asserts the unreachable lower FTP clamp — c482732
 
 ### Phase 6: Cookbook and deferred-gap recording
 
 #### Automated
 
-- [ ] 6.1 `npm test`, `npm run lint`, `npm run build` all pass
-- [ ] 6.2 §6.2 contains no "TBD"
-- [ ] 6.3 The §3 Phase 1 row no longer reads `implementing`
-- [ ] 6.4 Every B-series id B1–B8 appears at least once in `context/foundation/test-plan.md`
+- [x] 6.1 `npm test`, `npm run lint`, `npm run build` all pass
+- [x] 6.2 §6.2 contains no "TBD"
+- [x] 6.3 The §3 Phase 1 row no longer reads `implementing`
+- [x] 6.4 Every B-series id B1–B8 appears at least once in `context/foundation/test-plan.md`
 
 #### Manual
 
-- [ ] 6.5 Each §7 entry names a blocking question and a re-evaluation trigger
-- [ ] 6.6 §6.2 carries the valid-wrong-kind trap and the never-import-the-bound rule
-- [ ] 6.7 The B3 entry states the security consequence and §3 Phase 2 references it
-- [ ] 6.8 The §3 Phase 1 scope note reads as an accurate account to someone who wasn't here
+- [x] 6.5 Each §7 entry names a blocking question and a re-evaluation trigger
+- [x] 6.6 §6.2 carries the valid-wrong-kind trap and the never-import-the-bound rule
+- [x] 6.7 The B3 entry states the security consequence and §3 Phase 2 references it
+- [x] 6.8 The §3 Phase 1 scope note reads as an accurate account to someone who wasn't here

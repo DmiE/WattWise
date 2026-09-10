@@ -6,7 +6,7 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-09-07
+> Last updated: 2026-09-09
 
 ## 1. Strategy
 
@@ -84,8 +84,8 @@ orchestrator updates Status as artifacts appear on disk.
 
 | # | Phase name | Goal (one line) | Risks covered | Test types | Status | Change folder |
 |---|---|---|---|---|---|---|
-| 1 | Runner bootstrap + trust-boundary units | Stand up a test runner on the workerd-targeted stack and prove the AI trust boundary and equipment mapping reject what they must | #1, #3, #6 | unit | implementing | `context/changes/testing-runner-bootstrap/` (#1, implemented); `context/changes/testing-equipment-mapping-parity/` (#3, #6) |
-| 2 | Gate and plan-lifecycle integration | Prove the access/renewal gate and the generation-persist lifecycle behave under failure, not only on the happy path | #2, #5 | integration | not started | — |
+| 1 | Runner bootstrap + trust-boundary units | Stand up a test runner on the workerd-targeted stack and prove the AI trust boundary and equipment mapping reject what they must | #1, #3, #6 | unit | complete | `context/changes/testing-runner-bootstrap/` (#1, implemented); `context/changes/testing-equipment-mapping-parity/` (#3, #6, implemented) |
+| 2 | Gate and plan-lifecycle integration | Prove the access/renewal gate and the generation-persist lifecycle behave under failure, not only on the happy path | #2, #5; plus two endpoint-level residues handed over by Phase 1 — the unguarded `POST /api/onboarding` re-POST (**B3**, a Risk #3 write-path face) and Risk #6's "actionable 400, not an opaque 500" clause. See §7. | integration | not started | — |
 | 3 | Cross-account isolation | Prove one cyclist cannot read or mutate another's data on any data-touching endpoint | #4 | integration | not started | — |
 | 4 | E2E critical flows + gate wiring | Cover the crossings cheaper layers cannot reach, and wire every gate in §5 including the build-output secret scan | #7, residual #1–#3 | e2e, gates | not started | — |
 | 5 | AI-native plan-quality review (conditional) | Judge whether a generated plan is a coherent block for the stated goal — the part of #1 with no deterministic oracle; skip if Phase 1 closes #1 | residual #1 | AI-native review | not started | — |
@@ -112,16 +112,50 @@ cost with no signal. **Partly superseded — see §7.1:** Phase 1 has landed and
 Risk #1 is *not* closed, but the residue is not the AI-judgment problem Phase 5
 was designed for, so Phase 5 is neither skipped as `complete` nor started.
 
-**Phase 1 scope note (2026-09-07).** `context/changes/testing-runner-bootstrap/`
-has landed a Vitest runner, fixture factories, and units covering Risk #1's two
-testable clauses — availability containment and duration caps — plus the
-reject-don't-repair contract that makes them meaningful. **Risks #3 and #6 are
-not covered yet.** Both share this rollout phase but fell outside the research
-scope, and each needs its own research pass before any test asserts on it.
-Status is `implementing` for that reason, not because the shipped work is
-partial. A second change, `testing-equipment-mapping-parity`, was opened
-2026-09-07 to close #3 and #6 on the infrastructure the first one built; this
-rollout phase reaches `complete` only when that change does.
+**Phase 1 scope note (updated 2026-09-09 — phase complete).** This rollout
+phase ran as two changes against one risk set, and what it covers is narrower
+than "#1, #3, #6" reads.
+
+`context/changes/testing-runner-bootstrap/` (2026-09-07) landed the Vitest
+runner, the fixture factories, and units covering Risk #1's two *testable*
+clauses — availability containment and duration caps — plus the
+reject-don't-repair contract that makes them meaningful. It did **not** close
+Risk #1: the zone/%FTP correspondence the risk names has no oracle to assert
+against (the sources disagree on five zones versus seven), and plan completeness
+is stated nowhere. Both are recorded in §7 against **A1–A5**, and §7.1 explains
+why that residue does not belong to §3 Phase 5 either. Risks #3 and #6 were
+outside its research scope, which is why this phase read `implementing` rather
+than `complete` at that point — not because the shipped work was partial.
+
+`context/changes/testing-equipment-mapping-parity/` (2026-09-09) closed the rest.
+**Risk #3** is now asserted in both directions across all three equipment types
+through `validateGeneratedPlan` — the required kind accepts, each of the two
+wrong kinds rejects — plus per-segment isolation, the
+`schema`-versus-`equipment_mismatch` code boundary, and the render-side gap that
+research found real: the intensity legend and the segment targets are read from
+two independent sources (`equipment_at_generation` versus the stored
+`target.kind`) and nothing asserted they agree. **Risk #6** is now asserted as
+numeric bounds parity against the CHECK literals read out of the applied
+migration, and as the three cross-field CHECK truth tables that were previously
+upheld only by two hand-written derivation functions and verified once by
+reading. 120 unit assertions across six files.
+
+**What this phase deliberately left out**, all recorded in §7 with the question
+that blocks each: `available_days` DB parity (the DB and zod genuinely disagree
+— the emptiness CHECK is dead and duplicates pass, so the tests name zod as sole
+enforcer, B1/B2); the `weight_kg` `numeric(5,2)` rounding divergence (pinned as
+characterization, not fixed, B4); schema-level all-segments-share-one-kind
+enforcement (B7); read-path revalidation of `plan_sessions.structure` (B8, the
+archive's F6, now deferred twice); the DOM and `formatTarget` (module-private,
+no jsdom); renewal's silent `ftp_watts` discard (B5) and the missing `max_hr`
+update path (B6); and two endpoint-level items handed to §3 Phase 2 — Risk #6's
+"actionable error" clause and the unguarded `POST /api/onboarding` re-POST
+(**B3**), which is Risk #3 reached through the write path.
+
+**No production code changed in either change.** Every defect found was recorded
+rather than fixed, by decision; where current behaviour is a known divergence a
+test pins it, so the eventual fix meets a red test instead of a silent gap.
+Nothing from the A-series was re-litigated.
 
 ## 4. Stack
 
@@ -130,7 +164,7 @@ The classic test base for this project. AI-native tools (if any) carry a
 
 | Layer | Tool | Version | Notes |
 |---|---|---|---|
-| unit + integration | Vitest (+ `vite-tsconfig-paths`) | 4.1.11 | Unit only so far (§3 Phase 1); integration is Phase 2. Standalone `vitest.config.ts` — **not** Astro's `getViteConfig()`, which is broken on this pin (§6.1). Pinned to 4.1.x deliberately: `@cloudflare/vitest-plugin` peers `vitest ^4.1.0` and does not support 5, so the workerd pool stays available to Phase 2 without a runner migration. Keep `overrides.vite` in `package.json` — it dedupes vite at 7.3.3. Verified green: 2026-09-07 |
+| unit + integration | Vitest (+ `vite-tsconfig-paths`) | 4.1.11 | Unit only so far; integration is Phase 2. §3 Phase 1 is complete and unit now covers **Risks #1 (partially — see §7 A1–A5), #3, and #6** across `src/lib/plan.test.ts`, `intensity-reference.test.ts`, `onboarding-schema.test.ts`, `onboarding.test.ts`, `renewal.test.ts`, and the fixture coherence guard (120 assertions). Standalone `vitest.config.ts` — **not** Astro's `getViteConfig()`, which is broken on this pin (§6.1). Pinned to 4.1.x deliberately: `@cloudflare/vitest-plugin` peers `vitest ^4.1.0` and does not support 5, so the workerd pool stays available to Phase 2 without a runner migration. Keep `overrides.vite` in `package.json` — it dedupes vite at 7.3.3. Verified green: 2026-09-07 |
 | API mocking | none yet — see §3 Phase 2 | — | The only external HTTP edge is the AI provider, called with plain `fetch` and no vendor SDK; mock at that edge, never at internal module boundaries |
 | database fixtures | none yet — see §3 Phase 3 | — | Linked remote project only; local Docker stack is disabled, so isolation tests need real accounts rather than a resettable local database |
 | e2e | none yet — see §3 Phase 4 | — | Scope is the two critical crossings (onboard→plan, expired→renewal), not page coverage |
@@ -246,11 +280,104 @@ zod rejects first and the issue arrives as `schema`. Fixture weekend caps must
 stay below 360 (currently 180), or a cap test passes while asserting a
 different rule. See §7 and research A6.
 
-### 6.2 Adding an equipment-variant test
+### 6.2 Adding an equipment-variant or parity test
 
-- TBD — see §3 Phase 1. Will carry the pattern for asserting target-kind
-  exclusivity across all three equipment types — including the negative
-  half (an HRM profile must never produce watts).
+Established by §3 Phase 1 (`context/changes/testing-equipment-mapping-parity/`).
+Worked examples: `src/lib/plan.test.ts` (exclusivity),
+`src/lib/intensity-reference.test.ts` (legend agreement),
+`src/lib/onboarding-schema.test.ts` (bounds parity), `src/lib/onboarding.test.ts`
+and `src/lib/renewal.test.ts` (cross-field CHECKs). §6.1 still applies in full —
+this section adds what equipment variance and layer parity need on top of it.
+
+**Extend the fixture factories; never make them derive.** `makeHrmProfile` and
+`makeNoneProfile` (`__fixtures__/profile.ts`) each spell out their companion
+fields — `ftp_watts: null`, `ftp_source: null`, `max_hr` set or null,
+`fitness_level` non-null — and each docblock names the CHECK constraint that
+forces every one of them. They are new factories rather than a smarter
+`makeProfile` on purpose: a `makeProfile` that derived companions from
+`equipment_type` would be a second implementation of the derivation layer
+`onboarding.ts` owns, and the parity tests in §6.2's second half exist precisely
+to check *that* layer. Overriding `equipment_type` on `makeProfile` alone leaves
+`ftp_watts: 250` / `ftp_source: "measured"` in place, which violates
+`fitness_level_matches_ftp_source` — the resulting test would assert against a
+row the database could not hold. `makeProfile`'s own defaults and contract stay
+byte-identical whenever a variant is added.
+
+**Assert both directions, and use exact equality on issue codes.** "A
+power-meter cyclist gets watts" and "a power-meter cyclist never gets HR zones
+or RPE" are two different claims; a bug adding watts *alongside* HR zones keeps
+every accept-half row green. Cover all three equipment types in each direction,
+not one representative — a single wrong `EQUIPMENT_TARGET_KIND` entry produces a
+*uniformly* wrong plan that a one-equipment test passes without noticing. The
+mechanism that keeps the reject half honest is `toEqual` on the full issue-code
+list, never `toContain`: `toContain` still passes when the payload also tripped
+the availability, cap, or sum guardrails, and the row then proves only that
+*something* was wrong rather than that the equipment rule fired.
+
+**A wrong-kind target must be structurally valid.** To reach
+`equipment_mismatch`, pass a well-formed target of a different kind
+(`{ kind: "rpe", rpe: 4, description: "…" }` against a power-meter profile). A
+garbage kind (`{ kind: "power" }`) is rejected by zod's discriminated union
+first and `plan.ts:67-76` short-circuits, so the issue arrives as `schema` — the
+test passes while asserting a completely different rule. This is the same shape
+as the weekend-cap trap in §6.1, and the code boundary is pinned by its own test
+rather than left implicit.
+
+**Assert through the public entry point when the mapping is module-private.**
+`EQUIPMENT_TARGET_KIND` (`plan.ts:23-27`) is not exported, so the exclusivity
+matrix drives `validateGeneratedPlan` and writes the three kind literals out by
+hand from the oracle line. Not exportable is not the same as not testable — and
+the hand-written literal is better than an import would be, because a test that
+imported the mapping would keep passing if one entry were wrong. The same
+constraint was recorded for `WEEKDAY_BY_OFFSET` in the previous change.
+
+**Bind two independent sources to one shared literal.** Where the same rule is
+read from two places that never meet in production — the intensity legend comes
+from `equipment_at_generation` while targets come from the stored `target.kind`
+— the test is a table whose rows carry *one* hand-written mapping and assert
+both sources against it. Kind alone is not enough when two variants share it:
+`power_meter` and `hrm` both render `kind: "zones"`, so swap their entries and a
+kind-only assertion stays green while every HRM cyclist reads heart rates off a
+%-of-FTP table. Pick the field that actually separates them (caption substrings
+"FTP" versus "max HR"), and add a runtime key-exhaustiveness assertion —
+`Record<EquipmentType, …>` is a compile-time guarantee only.
+
+**Parity bounds are literals traced to the migration, never imported from the
+schema under test.** Every number in a parity table is read out of
+`supabase/migrations/20260602182721_init_mvp_schema.sql:50-69` by hand and
+carries the line it came from in a comment. Importing the bound under test is
+the mirror-implementation anti-pattern in its purest form: the row passes by
+construction and would keep passing after the bound was relaxed. Probe each
+bound from both sides using the smallest deviation the *column* can represent —
+a `smallint` steps by 1, `weight_kg` is `numeric(5,2)` so it steps by 0.01 — and
+remember that Postgres rounds to scale *before* the CHECK runs, so the value
+that exposes a divergence is one that rounds **into** range (`200.004`), not one
+the scale can hold (`200.01`, rejected by both layers, proving nothing).
+
+**Transcribe cross-field constraints as predicates, not as field
+expectations.** The three CHECKs with no zod counterpart —
+`power_meter_requires_ftp`, `hrm_requires_max_hr`,
+`fitness_level_matches_ftp_source` — live as SQL-quoting predicates in
+`__fixtures__/profile-check-constraints.ts`, and every derivation branch of
+`toProfileInsert` / `applyRenewal` is fed through all three. Restating a branch's
+expected fields (`ftp_source === "estimated"`) would just re-implement the
+`switch` in a second place and pass against a bug as happily as against correct
+code; a predicate read off the DDL says what the *database* will accept, which
+is the thing the derivation layer exists to guarantee. Watch the null semantics:
+`is not distinct from` treats `NULL` as comparable, and a `ProfileInsert` may
+omit a nullable column rather than set it to `null`, so predicates compare with
+`== null` / `!= null` to catch both states. Nothing in the predicate file may be
+imported from `onboarding.ts` or `renewal.ts`.
+
+**Where the layers genuinely disagree, assert sole enforcement and say so.** The
+`available_days` emptiness and uniqueness rules are enforced by zod only — the
+DB CHECK is dead (`array_length('{}'::text[], 1)` is `NULL`, and a CHECK
+evaluating to `NULL` is satisfied) and `<@` is subset containment, so seven
+`'mon'` entries pass too. Those tests name zod as the sole enforcer in a comment
+and cite the blocking question (§7, B1/B2) instead of claiming a parity that
+does not exist. Likewise, where current behaviour is a known divergence, pin it
+as a characterization with the open question named, so the eventual fix meets a
+red test rather than a silent gap.
 
 ### 6.3 Adding an integration test
 
@@ -284,6 +411,25 @@ Second, the red run is the deliverable, not the green one — mutating
 `plan.ts` to salvage sessions instead of rejecting the plan turned 18 of 23
 tests red, which revealed that nearly every earlier assertion routes through
 the rejection path while nothing had been pinning that path itself.
+
+**Phase 1, second change — equipment exclusivity + zod↔DB parity (2026-09-09).**
+Three things worth carrying forward. First, **the risk's premise was inverted on
+one of its two halves**: Risk #6 is worded as "the server accepts what the
+database rejects", but on `profiles` zod is *stricter* than the DB in two places
+and in one of them the DB constraint is dead code — `array_length('{}'::text[], 1)`
+is `NULL`, so a CHECK that appears to forbid the empty array satisfies it.
+Research is what caught that; a plan written from the risk wording alone would
+have produced parity tests asserting an agreement that does not exist. Second,
+**a wrong-kind fixture must be structurally valid or the test silently changes
+subject** — a garbage `target.kind` is rejected by zod's discriminated union
+first and returns `schema`, not `equipment_mismatch`, so the assertion would
+pass while proving nothing. Same shape as the weekend-cap trap from the first
+change, which suggests it is the recurring failure mode on this codebase:
+guardrails sit behind an earlier gate, and the earlier gate answers first.
+Third, **the two most valuable tests came from noticing that two sources are
+never compared** — the legend versus the stored target kind, and the CHECK set
+versus the derivation layer. Neither gap is visible in either file alone; both
+were pure-unit cost once seen.
 
 ## 7. What We Deliberately Don't Test
 
@@ -335,6 +481,116 @@ each names the open question that gates it. Question ids refer to
   below 360 (§6.1). Blocked on **A6**. Re-evaluate if either the 600 input
   bound or the 360 session ceiling changes.
 
+Added by §3 Phase 1's second change (2026-09-09), closing Risks #3 and #6.
+Question ids refer to
+`context/changes/testing-equipment-mapping-parity/research.md` §Open Questions.
+Each entry names what is not tested, the question that blocks it, and the
+trigger that should bring it back.
+
+- **`available_days` DB parity** — the database accepts what zod rejects here,
+  in both directions of the rule. `profiles_available_days_valid`
+  (`init_mvp_schema.sql:56-59`) is dead for the empty array:
+  `array_length('{}'::text[], 1)` is `NULL`, `NULL between 1 and 7` is `NULL`,
+  and a CHECK evaluating to `NULL` is satisfied — so `'{}'` stores. And `<@` is
+  subset containment, so `['mon','mon','mon','mon','mon','mon','mon']` stores as
+  a legal seven-day week. zod's `.min(1)` and its uniqueness `.refine`
+  (`onboarding-schema.ts:28-34`) are therefore the only real guards, and the
+  tests assert **zod as sole enforcer** rather than a parity that does not
+  exist. Blocked on **B1** (is the dead CHECK a migration defect to fix, or
+  accepted?) and **B2** (should day uniqueness be a DB constraint?).
+  Re-evaluate if the CHECK is repaired or a uniqueness constraint is added — at
+  that point these become real parity rows.
+- **`weight_kg` decimal scale** — `numeric(5,2)` (`init_mvp_schema.sql:40`) with
+  `check (weight_kg between 30 and 200)` (`:51`): Postgres rounds to scale
+  *before* the CHECK runs, so `200.004` is DB-legal (stores as `200.00`) while
+  zod's `.max(200)` rejects it, and `70.123456` passes zod and silently
+  truncates to `70.12`. Today's behaviour is **pinned as characterization, not
+  endorsed** — no fix in this change. The archive found and fixed this exact
+  defect on `km_ridden numeric(5,2)`
+  (`context/archive/2026-06-15-session-tracking/reviews/plan-review.md:38-46`)
+  and no document records the analysis being re-applied to `weight_kg`. Blocked
+  on **B4** (accept the rounding, or fix it as `km_ridden` was?). Re-evaluate
+  when B4 is decided; the pinned tests then turn red and name the change. The
+  `smallint` columns that accept fractional input are the same shape — zod's
+  `.int()` is their sole guard — and move with the same decision.
+- **Independent all-segments-share-one-kind enforcement** — target-kind
+  exclusivity is *transitive only*: `targetSchema` (`plan-schema.ts:44-51`) has
+  a single refine (the low ≤ high range check), no `superRefine`, and no
+  cross-segment constraint, so a mixed-kind payload parses clean and exclusivity
+  emerges only from every segment being compared to one profile-derived value.
+  `PLAN_JSON_SCHEMA` does not constrain kind either (`:173-175`, `anyOf` over
+  all three). The consequence: a wrong `EQUIPMENT_TARGET_KIND` entry produces a
+  *uniformly* wrong plan that validates, which is why the per-equipment matrix
+  covers all three types rather than one representative — that matrix is what
+  catches it today. Blocked on **B7** (should the schema enforce one kind per
+  plan independently of the profile?). Re-evaluate if a `superRefine` is added,
+  which would make this assertable at the schema layer for a fraction of the
+  cost.
+- **Read-path revalidation of `plan_sessions.structure`** — the unchecked
+  `as PlanSessionView` casts (`services/plan.ts:77-85,117-119`) stay. Nothing
+  re-validates stored structure on read, the renderer silently blanks an unknown
+  target kind, a malformed target SSR-500s, and there is no error boundary in
+  the repo. Blocked on **B8**. Note this is the archive's **F6**
+  (`context/archive/2026-06-10-first-plan-generation/reviews/impl-review.md:85-93`),
+  already SKIPPED once — the second deferral is deliberate, not a rediscovery.
+  Re-evaluate when B8 is answered, or immediately if a stored plan ever fails to
+  render for a user.
+- **`formatTarget` and the DOM** — `formatTarget` (`PlanView.tsx:611-621`) is
+  module-private, no jsdom or testing-library is installed, and §7 already
+  excludes UI look and feel. The formatter is an exhaustive `switch` that never
+  reads a unit-specific field outside its matching case, so it is safe by
+  construction; the render-side gap that was *real* — the legend and the target
+  kind coming from two independent sources — is covered by
+  `intensity-reference.test.ts` at pure-unit cost. Re-evaluate only if a
+  component-test layer is introduced for another reason, or if `formatTarget`
+  gains a branch that reads across kinds.
+- **Route-level rejection behaviour for Risk #6** — Risk #6's response guidance
+  requires that a value the database would reject is rejected by the server
+  first *with an actionable error*. The bounds and cross-field halves are
+  covered; the "actionable 400 rather than an opaque 500" clause is
+  endpoint-level and needs a request, auth, and a Supabase client. Routed to
+  **§3 Phase 2**, which owns the endpoint layer. Re-evaluate there, not here.
+- **`estimateFtpWatts`'s lower clamp** — unreachable, not merely untested.
+  `Math.max(50, …)` (`onboarding.ts:24`) can never fire: the lowest possible
+  product is `2.0 W/kg × 30 kg = 60`, and 30 kg is both zod's and the DB's
+  minimum weight. A test for it would be dead code asserting a dead branch. The
+  upper clamp *is* reachable (`3.7 × 200 = 740 → 600`) and is tested.
+  Re-evaluate if the weight floor or the W/kg table changes.
+- **Renewal's silent discard of `ftp_watts` from non-power-meter users** —
+  `applyRenewal` (`renewal.ts:25`) drops the field instead of rejecting the
+  request. Pinned as characterization, **not endorsed**: the test states that
+  today's behaviour is a silent discard. Blocked on **B5** (should renewal
+  return a 400 instead?). Re-evaluate when B5 is answered.
+- **`max_hr` has no update path outside re-onboarding** — an HRM cyclist whose
+  maximum heart rate changes cannot update it except by re-running onboarding,
+  which is itself the unguarded endpoint below. Recorded against **B6**
+  (intended?). No test, because there is no behaviour to pin — the gap is a
+  missing path, not a wrong one. Re-evaluate if a profile-edit field is added.
+- **Unguarded `POST /api/onboarding` re-POST (B3)** — the only finding in this
+  set with a security dimension, and the one most likely to be lost, so it is
+  recorded with its consequence rather than only its cause. The endpoint
+  (`src/pages/api/onboarding.ts:16-49`) has **one** guard — authenticated or
+  401 — and **no already-onboarded check**; it upserts unconditionally. The
+  middleware does not compensate: its keep-out-of-onboarding redirect keys on
+  `pathname.startsWith("/onboarding")` (`middleware.ts:28`), and
+  `/api/onboarding` starts with `/api`, so it is never matched. The consequence
+  is not merely a duplicate write. An already-onboarded cyclist can rewrite
+  **every field `profileEditSchema` deliberately withholds** — the restriction
+  that schema exists to document is enforced nowhere on this path — and
+  changing `equipment_type` while a plan is active desyncs the live plan from
+  the frozen `equipment_at_generation` snapshot the legend is read from. That
+  is **Risk #3 as literally worded** (a cyclist sees intensity targets that do
+  not match their declared equipment), reached through the write path instead of
+  the render path. Blocked on **B3** as a security/product call: is the re-POST
+  intended? It also determines the order of work — a regression test now, or a
+  fix first. Owned by **§3 Phase 2** (see its Risks-covered cell), which is the
+  first phase with the endpoint tooling to assert it. Re-evaluate **before** that
+  phase rather than during it — unlike every other entry here, this one is a live
+  gap in shipped behaviour rather than a missing test, so if B3 comes back "not
+  intended" it becomes a fix with a regression test, not a test pinning current
+  behaviour. Re-evaluate sooner if any profile field becomes writable through a
+  new endpoint, which widens the same hole.
+
 ### 7.1 Note on §3 Phase 5 (AI-native plan-quality review)
 
 §3 offers Phase 5 an exit: skip it "if Phase 1 shows the deterministic
@@ -360,7 +616,10 @@ belongs in §6.1's unit layer, not here.
 - Strategy (§1–§5) last reviewed: 2026-08-28
 - Stack versions last verified: 2026-08-28
 - AI-native tool references last verified: 2026-08-28
-- Test runner (§4 `unit + integration` row) verified green: 2026-09-07
+- Test runner (§4 `unit + integration` row) verified green: 2026-09-09
+- Cookbook (§6.1, §6.2) last written against shipped tests: 2026-09-09
+- Negative space (§7) last reconciled with research: 2026-09-09 (A-series from
+  `testing-runner-bootstrap`, B-series from `testing-equipment-mapping-parity`)
 
 Refresh (`/10x-test-plan --refresh`) when:
 
