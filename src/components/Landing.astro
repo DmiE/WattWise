@@ -1,0 +1,156 @@
+---
+import Topbar from "@/components/Topbar.astro";
+
+const { user } = Astro.locals;
+
+/**
+ * Sample session shown on the landing page. Static, illustrative content —
+ * the real thing is generated per profile. Numbers follow the PRD's zone
+ * mapping (Z4 = 91–105% FTP) at an FTP of 250 W so the example can't teach
+ * a cyclist something the product would contradict.
+ */
+const sampleSegments = [
+  { label: "Warm-up", minutes: 15, target: "150–170 W" },
+  { label: "2 × 12 min threshold", minutes: 30, target: "230–262 W" },
+  { label: "Cool-down", minutes: 15, target: "140–160 W" },
+];
+
+/** The guardrail, made visible: one session, three equipment types. */
+const sameSessionYourUnits = [
+  { equipment: "Power meter", target: "230–262 W" },
+  { equipment: "Heart-rate monitor", target: "Z4 · 158–168 bpm" },
+  { equipment: "No equipment", target: "RPE 7 · comfortably hard" },
+];
+
+const steps = [
+  {
+    n: "01",
+    title: "Tell it three things",
+    body: "Your FTP (or a fitness-level estimate), your goal, and the days you can ride.",
+  },
+  {
+    n: "02",
+    title: "Get four weeks",
+    body: "Sessions slotted onto your available days, each within your duration cap.",
+  },
+  {
+    n: "03",
+    title: "Check in, renew",
+    body: "When the block ends, confirm what changed and a fresh plan is generated.",
+  },
+];
+---
+
+<div class="bg-cosmic min-h-screen w-full text-white">
+  <div class="mx-auto max-w-5xl px-4 py-4 sm:px-8">
+    <Topbar />
+
+    <!-- Hero -->
+    <section class="py-20 sm:py-28">
+      <p class="mb-4 text-xs tracking-[0.2em] text-purple-300/80 uppercase">Training plans for self-coached cyclists</p>
+      <h1 class="max-w-3xl text-4xl leading-tight font-bold text-balance sm:text-5xl lg:text-6xl">
+        Your FTP, your hours, your goal — turned into
+        <span class="bg-gradient-to-r from-blue-200 to-purple-300 bg-clip-text text-transparent">today's session</span>.
+      </h1>
+      <p class="mt-6 max-w-xl text-lg leading-relaxed text-blue-100/70">
+        Strava tells you what you rode. WattWise tells you what to ride next — session type, duration, and intensity
+        targets precise enough for your power meter to verify.
+      </p>
+
+      <div class="mt-10 flex flex-col gap-3 sm:flex-row">
+        {
+          user ? (
+            <a
+              href="/dashboard"
+              class="inline-flex items-center justify-center rounded-lg bg-purple-600 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-purple-500"
+            >
+              Open your plan
+            </a>
+          ) : (
+            <>
+              <a
+                href="/auth/signup"
+                class="inline-flex items-center justify-center rounded-lg bg-purple-600 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-purple-500"
+              >
+                Build my plan
+              </a>
+              <a
+                href="/auth/signin"
+                class="inline-flex items-center justify-center rounded-lg border border-white/20 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-white/10"
+              >
+                Sign in
+              </a>
+            </>
+          )
+        }
+      </div>
+    </section>
+
+    <!-- Sample session: what the product actually hands you -->
+    <section class="grid gap-8 pb-20 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+      <div class="rounded-2xl border border-white/10 bg-white/10 p-6 backdrop-blur-xl sm:p-8">
+        <div class="mb-6 flex flex-wrap items-baseline justify-between gap-2">
+          <div>
+            <p class="text-xs tracking-wider text-blue-100/50 uppercase">Week 2 · Tuesday</p>
+            <h2 class="mt-1 text-xl font-semibold">Threshold intervals</h2>
+          </div>
+          <span class="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-blue-100/70">60 min</span>
+        </div>
+
+        <ul class="divide-y divide-white/10">
+          {
+            sampleSegments.map((segment) => (
+              <li class="flex items-center justify-between gap-4 py-3">
+                <span class="text-sm text-white">{segment.label}</span>
+                <span class="flex items-center gap-4 text-sm">
+                  <span class="text-blue-100/50">{segment.minutes} min</span>
+                  <span class="font-mono text-purple-200">{segment.target}</span>
+                </span>
+              </li>
+            ))
+          }
+        </ul>
+
+        <p class="mt-6 text-xs text-blue-100/40">
+          Illustrative session for an FTP of 250 W. Yours is generated from your own numbers.
+        </p>
+      </div>
+
+      <div class="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+        <h3 class="text-sm font-semibold text-white">Same session, your units</h3>
+        <p class="mt-2 text-sm leading-relaxed text-blue-100/60">
+          Targets are written in the unit you can actually measure — and never in one you can't.
+        </p>
+        <ul class="mt-5 space-y-3">
+          {
+            sameSessionYourUnits.map((row) => (
+              <li>
+                <p class="text-xs tracking-wide text-blue-100/50 uppercase">{row.equipment}</p>
+                <p class="mt-0.5 font-mono text-sm text-purple-200">{row.target}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+
+    <!-- How a block runs -->
+    <section class="border-t border-white/10 py-14">
+      <ol class="grid gap-8 sm:grid-cols-3">
+        {
+          steps.map((step) => (
+            <li>
+              <p class="font-mono text-xs text-purple-300/70">{step.n}</p>
+              <h3 class="mt-2 text-base font-semibold text-white">{step.title}</h3>
+              <p class="mt-2 text-sm leading-relaxed text-blue-100/60">{step.body}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <footer class="border-t border-white/10 py-8 text-sm text-blue-100/40">
+      WattWise — four weeks at a time. No ride-file imports, no feed, no notifications to ignore.
+    </footer>
+  </div>
+</div>
